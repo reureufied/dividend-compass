@@ -149,6 +149,8 @@ export const PortfolioBulkReview = ({
             </div>
           );
         })()}
+
+        <div className="max-h-[55vh] overflow-auto rounded-lg border border-border">
           <Table>
             <TableHeader>
               <TableRow>
