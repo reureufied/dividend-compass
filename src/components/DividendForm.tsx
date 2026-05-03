@@ -197,7 +197,7 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
       const dataUrl = await fileToDataUrl(file);
       setScanPreview(dataUrl);
       const { data, error } = await supabase.functions.invoke("parse-dividend-screenshot", {
-        body: { imageDataUrl: dataUrl },
+        body: { imageDataUrl: dataUrl, knownAssetNames: knownNames },
       });
 
       // supabase-js puts non-2xx body inside error.context (a Response object)
@@ -216,7 +216,24 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
 
       const results = payload?.results;
       if (Array.isArray(results) && results.length > 0) {
-        const drafts = results.map(toDraftRow);
+        const drafts: DraftRow[] = results.map(toDraftRow).map((d) => {
+          const raw = d.asset_name?.trim();
+          if (!raw) return d;
+          const nraw = normalizeAsset(raw);
+          // Exact normalized match
+          const exact = knownNames.find((k) => normalizeAsset(k) === nraw);
+          if (exact && exact !== raw) return { ...d, asset_name: exact, auto_mapped: true, original_name: raw };
+          // Fuzzy ≥ 0.8
+          let best: { name: string; score: number } | null = null;
+          for (const k of knownNames) {
+            const s = similarity(raw, k);
+            if (!best || s > best.score) best = { name: k, score: s };
+          }
+          if (best && best.score >= 0.8 && best.name !== raw) {
+            return { ...d, asset_name: best.name, auto_mapped: true, original_name: raw };
+          }
+          return d;
+        });
         setDraftRows(drafts);
         setReviewOpen(true);
         toast.success(`${drafts.length}건의 내역을 찾았어요. 검토 후 저장해 주세요!`);
