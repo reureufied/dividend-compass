@@ -44,6 +44,8 @@ export interface DraftRow {
   category: Category;
   amount: string; // string for editable input
   currency: Currency;
+  auto_mapped?: boolean;
+  original_name?: string;
 }
 
 interface Props {
