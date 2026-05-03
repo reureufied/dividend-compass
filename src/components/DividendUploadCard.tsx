@@ -19,6 +19,7 @@ interface Props {
 export const DividendUploadCard = ({ fxRate, onSaved, onToggleManual, manualOpen }: Props) => {
   const knownNames = useKnownAssetNames();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const inFlightRef = useRef(false);
   const [scanning, setScanning] = useState(false);
   const [scanPreview, setScanPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
