@@ -924,4 +924,4 @@ const PortfolioAnalysis = () => {
   );
 };
 
-export default Portfolio;
+export default PortfolioAnalysis;
