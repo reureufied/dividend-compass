@@ -97,7 +97,7 @@ export const AssetMergeManager = () => {
       for (let j = i + 1; j < n; j++) {
         const a = arr[i].name, b = arr[j].name;
         if (ignorePairs.has(pairKey(a, b))) continue;
-        if (similarity(a, b) >= 0.85) union(i, j);
+        if (similarity(a, b) >= 0.8) union(i, j);
       }
     }
     const map = new Map<number, AssetRow[]>();
