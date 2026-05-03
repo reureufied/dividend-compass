@@ -20,7 +20,7 @@ const AddDividend = () => {
   const [manualValue, setManualValue] = useState<string>("");
 
   useEffect(() => {
-    document.title = "기록 추가 · Dividend Tracker";
+    document.title = "기록 추가 · Portfolio Lab";
     getUsdKrwRate().then(({ rate }) => setFxRate(rate));
   }, []);
 

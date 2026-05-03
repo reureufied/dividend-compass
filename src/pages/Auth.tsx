@@ -71,7 +71,7 @@ const Auth = () => {
   const [displayName, setDisplayName] = useState("");
 
   useEffect(() => {
-    document.title = "로그인 · Dividend Tracker";
+    document.title = "로그인 · Portfolio Lab";
   }, []);
 
   if (loading) return null;
@@ -139,7 +139,7 @@ const Auth = () => {
           <div className="h-11 w-11 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-elev-lg">
             <TrendingUp className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Dividend Tracker</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Portfolio Lab</h1>
         </div>
 
         <Card className="p-6 shadow-elev-md border-border/60">

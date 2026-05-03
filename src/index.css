@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Dividend Tracker — Toss/Robinhood-inspired fintech design system. All colors HSL. */
+/* Portfolio Lab — Toss/Robinhood-inspired fintech design system. All colors HSL. */
 
 @layer base {
   :root {

@@ -7,7 +7,7 @@ import YieldAnalysis from "./analysis/YieldAnalysis";
 
 const Analysis = () => {
   useEffect(() => {
-    document.title = "분석 · Dividend Tracker";
+    document.title = "분석 · Portfolio Lab";
   }, []);
 
   return (
