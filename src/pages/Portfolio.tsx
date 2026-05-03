@@ -620,6 +620,55 @@ const Portfolio = () => {
             )}
           </Card>
         </TabsContent>
+
+        {/* ===== Snapshot Manager ===== */}
+        <TabsContent value="manage" className="space-y-4">
+          <Card className="p-0 overflow-hidden">
+            {distinctDates.length === 0 ? (
+              <div className="p-10 text-center text-muted-foreground">저장된 스냅샷이 없어요.</div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>스냅샷 날짜</TableHead>
+                    <TableHead className="text-right">종목 수</TableHead>
+                    <TableHead className="text-right">평가금액 합계</TableHead>
+                    <TableHead className="text-right w-[260px]">관리</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {distinctDates.map((d) => {
+                    const rows = snaps.filter((s) => s.snapshot_date === d);
+                    const value = rows.reduce((a, b) => a + b.quantity * b.current_price, 0);
+                    return (
+                      <TableRow key={d}>
+                        <TableCell className="font-medium">{d}</TableCell>
+                        <TableCell className="text-right">{rows.length}</TableCell>
+                        <TableCell className="text-right">{formatKRW(Math.round(value))}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button variant="outline" size="sm" onClick={() => { setSelectedDate(d); }}>
+                              조회
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => {
+                              setEditDateTarget(d);
+                              setEditDateNew(new Date(d));
+                            }}>
+                              <Pencil className="h-4 w-4 mr-1" /> 날짜 수정
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => setDeleteDateTarget(d)}>
+                              <Trash2 className="h-4 w-4 mr-1 text-destructive" /> 삭제
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </Card>
+        </TabsContent>
       </Tabs>
 
       <PortfolioBulkReview
@@ -631,6 +680,79 @@ const Portfolio = () => {
         setSnapshotDate={setSnapshotDate}
         onSaved={loadSnaps}
       />
+
+      <EditHoldingDialog
+        open={editHoldingOpen}
+        onOpenChange={setEditHoldingOpen}
+        holding={editHolding}
+        onSaved={loadSnaps}
+      />
+
+      {/* Delete single row */}
+      <AlertDialog open={!!deleteRowId} onOpenChange={(o) => !o && setDeleteRowId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>이 종목 기록을 삭제할까요?</AlertDialogTitle>
+            <AlertDialogDescription>해당 스냅샷에서 이 종목 행이 삭제됩니다.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deleteRowId && deleteHoldingRow(deleteRowId)}>삭제</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete entire date */}
+      <AlertDialog open={!!deleteDateTarget} onOpenChange={(o) => !o && setDeleteDateTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>해당 날짜의 모든 자산 기록을 삭제하시겠습니까?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteDateTarget} 스냅샷에 속한 모든 종목 행이 영구적으로 삭제됩니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deleteDateTarget && deleteSnapshotDate(deleteDateTarget)}>
+              {dateOpsLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}삭제
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit snapshot date (bulk) */}
+      <Dialog open={!!editDateTarget} onOpenChange={(o) => !o && setEditDateTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>스냅샷 날짜 일괄 변경</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{editDateTarget}</span> 의 모든 종목 기록 날짜를 아래 날짜로 변경합니다.
+            </p>
+            <div className="grid gap-1.5">
+              <Label>새 기준 날짜</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start font-normal">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(editDateNew, "yyyy.MM.dd")}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={editDateNew} onSelect={(d) => d && setEditDateNew(d)} initialFocus className="p-3 pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDateTarget(null)}>취소</Button>
+            <Button onClick={updateSnapshotDate} disabled={dateOpsLoading}>
+              {dateOpsLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}저장
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
