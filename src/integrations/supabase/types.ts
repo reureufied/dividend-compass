@@ -77,6 +77,45 @@ export type Database = {
         }
         Relationships: []
       }
+      portfolio_snapshots: {
+        Row: {
+          asset_name: string
+          avg_purchase_price: number
+          created_at: string
+          current_price: number
+          id: string
+          quantity: number
+          snapshot_date: string
+          target_weight: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          asset_name: string
+          avg_purchase_price?: number
+          created_at?: string
+          current_price?: number
+          id?: string
+          quantity?: number
+          snapshot_date: string
+          target_weight?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          asset_name?: string
+          avg_purchase_price?: number
+          created_at?: string
+          current_price?: number
+          id?: string
+          quantity?: number
+          snapshot_date?: string
+          target_weight?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
