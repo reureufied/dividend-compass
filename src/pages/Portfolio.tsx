@@ -179,6 +179,34 @@ const Portfolio = () => {
     return diffs;
   }, [snaps, focusAsset, periodMonths]);
 
+  // ====== View 3: asset-centric trend (all-time) ======
+  const trendRows = useMemo(() => {
+    if (!trendAsset) return [];
+    const rows = snaps
+      .filter((s) => s.asset_name === trendAsset)
+      .map((s) => {
+        const principal = s.quantity * s.avg_purchase_price;
+        const value = s.quantity * s.current_price;
+        return {
+          date: s.snapshot_date,
+          quantity: s.quantity,
+          avg_purchase_price: s.avg_purchase_price,
+          current_price: s.current_price,
+          principal,
+          value,
+          pnl: value - principal,
+        };
+      })
+      .sort((a, b) => (a.date < b.date ? -1 : 1));
+    return rows;
+  }, [snaps, trendAsset]);
+
+  const trendTableRows = useMemo(() => {
+    const arr = [...trendRows];
+    arr.sort((a, b) => (trendSortAsc ? (a.date < b.date ? -1 : 1) : a.date < b.date ? 1 : -1));
+    return arr;
+  }, [trendRows, trendSortAsc]);
+
   // ====== OCR Upload ======
   const fileToDataUrl = (file: File) =>
     new Promise<string>((resolve, reject) => {
