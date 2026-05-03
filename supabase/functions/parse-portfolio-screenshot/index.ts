@@ -66,8 +66,10 @@ ${knownList.length > 0
                   properties: {
                     asset_name: { type: "string" },
                     quantity: { type: "number" },
-                    avg_purchase_price: { type: "number" },
-                    current_price: { type: "number" },
+                    avg_purchase_price: { type: ["number", "null"] },
+                    current_price: { type: ["number", "null"] },
+                    total_purchase_amount: { type: ["number", "null"] },
+                    evaluation_amount: { type: ["number", "null"] },
                   },
                   additionalProperties: false,
                 },
