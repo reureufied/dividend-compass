@@ -87,7 +87,7 @@ const PortfolioAnalysis = () => {
   const [dateOpsLoading, setDateOpsLoading] = useState(false);
 
   useEffect(() => {
-    document.title = "포트폴리오 분석 · Dividend Tracker";
+    // title controlled by parent Analysis page
   }, []);
 
   const loadSnaps = async () => {
