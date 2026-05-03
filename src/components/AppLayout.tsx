@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, PlusCircle, Calendar, Search, Settings, TrendingUp, LogOut } from "lucide-react";
+import { LayoutDashboard, PlusCircle, Calendar, Search, Settings, TrendingUp, LogOut, BarChart3 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ const navItems = [
   { to: "/", label: "대시보드", icon: LayoutDashboard, end: true },
   { to: "/add", label: "배당 기록", icon: PlusCircle, highlight: true },
   { to: "/calendar", label: "캘린더", icon: Calendar },
+  { to: "/analysis", label: "수익률 분석", icon: BarChart3 },
   { to: "/search", label: "상세 검색", icon: Search },
   { to: "/settings", label: "마이페이지", icon: Settings },
 ];
@@ -33,7 +34,9 @@ export const AppLayout = () => {
             <span className="font-bold text-lg tracking-tight">Dividend Tracker</span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="hidden sm:inline text-sm text-muted-foreground">{user?.email}</span>
+            <span className="hidden sm:inline text-sm text-muted-foreground">
+              {(user?.user_metadata as any)?.username ?? user?.email?.split("@")[0]}
+            </span>
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">로그아웃</span>
@@ -74,7 +77,7 @@ export const AppLayout = () => {
 
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur-lg border-t border-border">
-        <div className="grid grid-cols-5">
+        <div className="grid grid-cols-6">
           {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}

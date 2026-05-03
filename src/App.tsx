@@ -12,6 +12,7 @@ import AddDividend from "./pages/AddDividend";
 import CalendarPage from "./pages/CalendarPage";
 import SearchPage from "./pages/SearchPage";
 import Settings from "./pages/Settings";
+import Analysis from "./pages/Analysis";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/add" element={<AddDividend />} />
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/search" element={<SearchPage />} />
+              <Route path="/analysis" element={<Analysis />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
             <Route path="*" element={<NotFound />} />
