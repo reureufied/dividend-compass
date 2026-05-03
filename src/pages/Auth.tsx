@@ -22,7 +22,7 @@ import {
 // Internal-only domains used to back ID-based auth on top of email auth.
 // Keep the legacy domain so accounts created before the ID-login update can still sign in.
 const ID_DOMAINS = ["local.compass", "id.local"] as const;
-const usernameToEmail = (u: string, domain = ID_DOMAINS[0]) => `${u.trim().toLowerCase()}@${domain}`;
+const usernameToEmail = (u: string, domain: string = ID_DOMAINS[0]) => `${u.trim().toLowerCase()}@${domain}`;
 const usernameToLoginEmails = (u: string) => ID_DOMAINS.map((domain) => usernameToEmail(u, domain));
 
 const usernameSchema = z
