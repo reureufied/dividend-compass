@@ -57,6 +57,7 @@ interface Props {
 export const BulkReviewDialog = ({ open, onOpenChange, rows, setRows, fxRate, onSaved }: Props) => {
   const { user } = useAuth();
   const [saving, setSaving] = useState(false);
+  const knownNames = useKnownAssetNames();
 
   const update = (idx: number, patch: Partial<DraftRow>) => {
     setRows(rows.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
