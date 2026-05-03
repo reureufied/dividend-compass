@@ -43,6 +43,7 @@ interface Props {
 
 export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
   const { user } = useAuth();
+  const knownNames = useKnownAssetNames();
   const [date, setDate] = useState<Date>(new Date());
   const [assetName, setAssetName] = useState("");
   const [category, setCategory] = useState<Category>("한국 ETF");
