@@ -26,16 +26,12 @@ interface Profile {
   yearly_goal: number;
 }
 
-const Index = () => {
+const DividendAnalysis = () => {
   const { user } = useAuth();
   const [items, setItems] = useState<Dividend[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [range, setRange] = useState<DateRange>(computeRange("3m"));
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    document.title = "대시보드 · Dividend Tracker";
-  }, []);
 
   useEffect(() => {
     if (!user) return;
