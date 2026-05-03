@@ -273,4 +273,4 @@ const compactKRW = (v: number) => {
   return `${v}`;
 };
 
-export default Index;
+export default DividendAnalysis;
