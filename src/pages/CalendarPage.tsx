@@ -199,7 +199,7 @@ const CalendarPage = () => {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight">캘린더</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">캘린더</h1>
         <p className="text-muted-foreground mt-1">받은 배당, 예정 배당, 그리고 나만의 일정을 한곳에서 확인하세요</p>
       </header>
 

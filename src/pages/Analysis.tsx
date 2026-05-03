@@ -13,7 +13,7 @@ const Analysis = () => {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight">분석</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">분석</h1>
         <p className="text-muted-foreground mt-1">한눈에 보는 자산 현황과 세부 지표를 살펴보세요.</p>
       </header>
 

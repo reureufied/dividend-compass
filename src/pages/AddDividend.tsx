@@ -49,7 +49,7 @@ const AddDividend = () => {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight">기록 추가</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">기록 추가</h1>
         <p className="text-muted-foreground mt-1">배당금과 보유 자산을 한 곳에서 기록하세요</p>
       </header>
 

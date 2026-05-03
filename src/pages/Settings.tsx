@@ -149,7 +149,7 @@ const Settings = () => {
   return (
     <div className="space-y-6 max-w-2xl">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight">마이페이지</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">마이페이지</h1>
         <p className="text-muted-foreground mt-1">목표 설정, 종목 관리, 데이터 백업을 한곳에서</p>
       </header>
 
