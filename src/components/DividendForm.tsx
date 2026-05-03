@@ -40,7 +40,6 @@ interface Props {
 
 export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
   const { user } = useAuth();
-  const knownNames = useKnownAssetNames();
   const [date, setDate] = useState<Date>(new Date());
   const [assetName, setAssetName] = useState("");
   const [category, setCategory] = useState<Category>("한국 ETF");
@@ -52,12 +51,6 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
   const [assetOptions, setAssetOptions] = useState<string[]>([]);
   const [assetOpen, setAssetOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
-  const [scanning, setScanning] = useState(false);
-  const [scanPreview, setScanPreview] = useState<string | null>(null);
-  const [dragActive, setDragActive] = useState(false);
-  const [reviewOpen, setReviewOpen] = useState(false);
-  const [draftRows, setDraftRows] = useState<DraftRow[]>([]);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     getUsdKrwRate().then(({ rate, fallback }) => {
@@ -65,30 +58,6 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
       setRateFallback(fallback);
     });
   }, []);
-
-  useEffect(() => {
-    if (editing) return;
-    const onPaste = (e: ClipboardEvent) => {
-      const items = e.clipboardData?.items;
-      if (!items) return;
-      for (const item of Array.from(items)) {
-        if (item.type.startsWith("image/")) {
-          const file = item.getAsFile();
-          if (file) {
-            e.preventDefault();
-            handleScreenshot(file);
-            return;
-          }
-        }
-      }
-    };
-    window.addEventListener("paste", onPaste);
-    return () => window.removeEventListener("paste", onPaste);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editing]);
-
-  useEffect(() => {
-    if (!user) return;
     supabase
       .from("dividends")
       .select("asset_name")
