@@ -47,7 +47,10 @@ const Auth = () => {
         if (error) throw error;
         toast.success("가입 완료! 대시보드로 이동합니다.");
       } else {
-        const { error } = await supabase.auth.signInWithPassword(parsed.data);
+        const { error } = await supabase.auth.signInWithPassword({
+          email: parsed.data.email,
+          password: parsed.data.password,
+        });
         if (error) throw error;
         toast.success("환영합니다 👋");
       }
