@@ -58,6 +58,9 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
       setRateFallback(fallback);
     });
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
     supabase
       .from("dividends")
       .select("asset_name")
