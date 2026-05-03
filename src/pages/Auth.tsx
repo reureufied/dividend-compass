@@ -123,7 +123,7 @@ const Auth = () => {
                     <Input
                       id="display-name"
                       type="text"
-                      placeholder="예: 홍길동"
+                      placeholder="예: 이르르"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       maxLength={50}
