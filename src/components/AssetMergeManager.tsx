@@ -86,6 +86,42 @@ export const AssetMergeManager = () => {
     return Array.from(map.values()).filter((g) => g.length > 1);
   }, [rows]);
 
+  // Smart fuzzy grouping (≥85% similarity), Union-Find across all names, excluding ignored pairs
+  const smartGroups = useMemo(() => {
+    const arr = rows.map((r) => r);
+    const n = arr.length;
+    const parent = Array.from({ length: n }, (_, i) => i);
+    const find = (x: number): number => (parent[x] === x ? x : (parent[x] = find(parent[x])));
+    const union = (a: number, b: number) => { const ra = find(a), rb = find(b); if (ra !== rb) parent[ra] = rb; };
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const a = arr[i].name, b = arr[j].name;
+        if (ignorePairs.has(pairKey(a, b))) continue;
+        if (similarity(a, b) >= 0.85) union(i, j);
+      }
+    }
+    const map = new Map<number, AssetRow[]>();
+    for (let i = 0; i < n; i++) {
+      const r = find(i);
+      const list = map.get(r) ?? [];
+      list.push(arr[i]);
+      map.set(r, list);
+    }
+    return Array.from(map.values())
+      .filter((g) => g.length > 1)
+      .map((g) => g.sort((x, y) => (y.dividends + y.snapshots) - (x.dividends + x.snapshots)));
+  }, [rows, ignorePairs]);
+
+  const ignoreGroup = (g: AssetRow[]) => {
+    const next = new Set(ignorePairs);
+    for (let i = 0; i < g.length; i++)
+      for (let j = i + 1; j < g.length; j++)
+        next.add(pairKey(g[i].name, g[j].name));
+    setIgnorePairs(next);
+    saveIgnore(next);
+    toast.success("이 조합은 다시 추천되지 않아요");
+  };
+
   const toggle = (name: string) => {
     const next = new Set(selected);
     if (next.has(name)) next.delete(name); else next.add(name);
