@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
+import { AlertTriangle, Loader2, Sparkles, Trash2 } from "lucide-react";
 import { useKnownAssetNames } from "@/hooks/useKnownAssetNames";
 import { findSimilarAsset } from "@/lib/assetMatch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
