@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Combine, Loader2, Pencil, Sparkles } from "lucide-react";
+import { Combine, Loader2, Pencil, Sparkles, Wand2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,15 @@ import {
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { findSimilarAsset, normalizeAsset } from "@/lib/assetMatch";
+import { findSimilarAsset, normalizeAsset, similarity } from "@/lib/assetMatch";
+
+const IGNORE_KEY = "asset_merge_ignore_pairs_v1";
+const pairKey = (a: string, b: string) => (a < b ? `${a}||${b}` : `${b}||${a}`);
+const loadIgnore = (): Set<string> => {
+  try { return new Set(JSON.parse(localStorage.getItem(IGNORE_KEY) ?? "[]")); }
+  catch { return new Set(); }
+};
+const saveIgnore = (s: Set<string>) => localStorage.setItem(IGNORE_KEY, JSON.stringify(Array.from(s)));
 
 interface AssetRow {
   name: string;
@@ -31,6 +39,8 @@ export const AssetMergeManager = () => {
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameSource, setRenameSource] = useState("");
   const [renameTo, setRenameTo] = useState("");
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [ignorePairs, setIgnorePairs] = useState<Set<string>>(() => loadIgnore());
 
   const load = async () => {
     setLoading(true);
@@ -75,6 +85,42 @@ export const AssetMergeManager = () => {
     });
     return Array.from(map.values()).filter((g) => g.length > 1);
   }, [rows]);
+
+  // Smart fuzzy grouping (≥85% similarity), Union-Find across all names, excluding ignored pairs
+  const smartGroups = useMemo(() => {
+    const arr = rows.map((r) => r);
+    const n = arr.length;
+    const parent = Array.from({ length: n }, (_, i) => i);
+    const find = (x: number): number => (parent[x] === x ? x : (parent[x] = find(parent[x])));
+    const union = (a: number, b: number) => { const ra = find(a), rb = find(b); if (ra !== rb) parent[ra] = rb; };
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const a = arr[i].name, b = arr[j].name;
+        if (ignorePairs.has(pairKey(a, b))) continue;
+        if (similarity(a, b) >= 0.85) union(i, j);
+      }
+    }
+    const map = new Map<number, AssetRow[]>();
+    for (let i = 0; i < n; i++) {
+      const r = find(i);
+      const list = map.get(r) ?? [];
+      list.push(arr[i]);
+      map.set(r, list);
+    }
+    return Array.from(map.values())
+      .filter((g) => g.length > 1)
+      .map((g) => g.sort((x, y) => (y.dividends + y.snapshots) - (x.dividends + x.snapshots)));
+  }, [rows, ignorePairs]);
+
+  const ignoreGroup = (g: AssetRow[]) => {
+    const next = new Set(ignorePairs);
+    for (let i = 0; i < g.length; i++)
+      for (let j = i + 1; j < g.length; j++)
+        next.add(pairKey(g[i].name, g[j].name));
+    setIgnorePairs(next);
+    saveIgnore(next);
+    toast.success("이 조합은 다시 추천되지 않아요");
+  };
 
   const toggle = (name: string) => {
     const next = new Set(selected);
@@ -171,6 +217,16 @@ export const AssetMergeManager = () => {
       <p className="text-sm text-muted-foreground mb-4">
         OCR 오타·띄어쓰기로 분리된 종목을 하나로 합칠 수 있어요. 유사 종목은 자동으로 추천됩니다.
       </p>
+
+      {smartGroups.length > 0 && (
+        <div className="mb-4 flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3">
+          <div className="flex items-center gap-2 text-sm">
+            <Wand2 className="h-4 w-4 text-primary" />
+            <span>데이터 정리가 필요해 보입니다 — <b>{smartGroups.length}건</b>의 유사 종목 그룹이 발견되었어요.</span>
+          </div>
+          <Button size="sm" onClick={() => setSuggestOpen(true)}>추천 보기</Button>
+        </div>
+      )}
 
       {groups.length > 0 && (
         <div className="mb-4 space-y-2">
@@ -292,6 +348,53 @@ export const AssetMergeManager = () => {
             <Button onClick={renameAsset} disabled={merging || !renameTo.trim()}>
               {merging && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}변경
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={suggestOpen} onOpenChange={setSuggestOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>유사 종목 병합 추천</DialogTitle>
+            <DialogDescription>
+              이름이 85% 이상 유사한 종목 그룹입니다. 대표 이름은 사용 빈도가 가장 높은 이름을 추천했어요.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-auto space-y-3">
+            {smartGroups.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-6">추천할 그룹이 없습니다 🎉</p>
+            )}
+            {smartGroups.map((g, i) => {
+              const rep = g[0]?.name;
+              return (
+                <div key={i} className="rounded-lg border border-border p-3 space-y-2">
+                  <div className="flex flex-wrap gap-1">
+                    {g.map((row) => (
+                      <Badge key={row.name} variant={row.name === rep ? "default" : "outline"}>
+                        {row.name}
+                        <span className="ml-1 opacity-60">({row.dividends + row.snapshots})</span>
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs text-muted-foreground">
+                      추천 대표 이름: <b className="text-foreground">{rep}</b>
+                    </p>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => ignoreGroup(g)}>
+                        <X className="h-4 w-4 mr-1" /> 다른 종목임
+                      </Button>
+                      <Button size="sm" onClick={() => { setSuggestOpen(false); openMerge(g.map((x) => x.name)); }}>
+                        <Sparkles className="h-4 w-4 mr-1" /> 하나로 합치기
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSuggestOpen(false)}>닫기</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
