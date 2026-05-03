@@ -68,22 +68,18 @@ export const BulkReviewDialog = ({ open, onOpenChange, rows, setRows, fxRate, on
     [rows]
   );
 
-  const handleSave = async () => {
-    if (!user) return;
-    const valid = rows.filter(
-      (r) => r.date && r.asset_name.trim() && parseFloat(r.amount) > 0
-    );
-    if (valid.length === 0) {
-      toast.error("저장할 유효한 내역이 없어요");
-      return;
-    }
-    setSaving(true);
-    try {
-      const payload = valid.map((r) => {
+  const [dupOpen, setDupOpen] = useState(false);
+  const [dupCount, setDupCount] = useState(0);
+  const [pendingPayload, setPendingPayload] = useState<any[]>([]);
+
+  const buildPayload = (rs: DraftRow[]) =>
+    rs
+      .filter((r) => r.date && r.asset_name.trim() && parseFloat(r.amount) > 0)
+      .map((r) => {
         const amt = parseFloat(r.amount);
         const amount_krw = r.currency === "USD" ? amt * fxRate : amt;
         return {
-          user_id: user.id,
+          user_id: user!.id,
           date: r.date,
           asset_name: r.asset_name.trim(),
           category: r.category,
@@ -92,12 +88,57 @@ export const BulkReviewDialog = ({ open, onOpenChange, rows, setRows, fxRate, on
           amount_krw,
         };
       });
-      const { error } = await supabase.from("dividends").insert(payload);
-      if (error) throw error;
-      toast.success(`${payload.length}건이 저장되었습니다 🎉`);
-      onOpenChange(false);
-      setRows([]);
-      onSaved();
+
+  const insertRows = async (payload: any[]) => {
+    const { error } = await supabase.from("dividends").insert(payload);
+    if (error) throw error;
+    toast.success(`${payload.length}건이 저장되었습니다 🎉`);
+    onOpenChange(false);
+    setRows([]);
+    onSaved();
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+    const payload = buildPayload(rows);
+    if (payload.length === 0) {
+      toast.error("저장할 유효한 내역이 없어요");
+      return;
+    }
+    setSaving(true);
+    try {
+      // Fetch existing rows that match any of the (date, asset_name) combos
+      const dates = Array.from(new Set(payload.map((p) => p.date)));
+      const names = Array.from(new Set(payload.map((p) => p.asset_name)));
+      const { data: existing, error: qErr } = await supabase
+        .from("dividends")
+        .select("date, asset_name, amount")
+        .in("date", dates)
+        .in("asset_name", names);
+      if (qErr) throw qErr;
+
+      const existingKeys = new Set(
+        (existing ?? []).map((e: any) => `${e.date}|${e.asset_name}|${Number(e.amount)}`)
+      );
+      const dups = payload.filter((p) => existingKeys.has(`${p.date}|${p.asset_name}|${Number(p.amount)}`));
+      const fresh = payload.filter((p) => !existingKeys.has(`${p.date}|${p.asset_name}|${Number(p.amount)}`));
+
+      if (dups.length === 0) {
+        await insertRows(payload);
+        return;
+      }
+
+      if (fresh.length === 0) {
+        toast.info("모든 기록이 이미 저장되어 있습니다.");
+        onOpenChange(false);
+        setRows([]);
+        return;
+      }
+
+      // Mixed → confirm
+      setDupCount(dups.length);
+      setPendingPayload(fresh);
+      setDupOpen(true);
     } catch (err: any) {
       toast.error(err?.message ?? "저장 중 오류가 발생했어요");
     } finally {
