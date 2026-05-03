@@ -366,6 +366,7 @@ const Portfolio = () => {
         <TabsList>
           <TabsTrigger value="point">특정 시점 분석</TabsTrigger>
           <TabsTrigger value="series">시계열 변동 분석</TabsTrigger>
+          <TabsTrigger value="manage">스냅샷 관리</TabsTrigger>
         </TabsList>
 
         {/* ===== View 1 ===== */}
