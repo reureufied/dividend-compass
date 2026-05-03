@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "sonner";
 import { findSimilarAsset, normalizeAsset, similarity } from "@/lib/assetMatch";
 
-const IGNORE_KEY = "asset_merge_ignore_pairs_v1";
+const IGNORE_KEY = "asset_merge_ignore_pairs_v2";
 const pairKey = (a: string, b: string) => (a < b ? `${a}||${b}` : `${b}||${a}`);
 const loadIgnore = (): Set<string> => {
   try { return new Set(JSON.parse(localStorage.getItem(IGNORE_KEY) ?? "[]")); }
@@ -97,7 +97,7 @@ export const AssetMergeManager = () => {
       for (let j = i + 1; j < n; j++) {
         const a = arr[i].name, b = arr[j].name;
         if (ignorePairs.has(pairKey(a, b))) continue;
-        if (similarity(a, b) >= 0.8) union(i, j);
+        if (similarity(a, b) >= 0.75) union(i, j);
       }
     }
     const map = new Map<number, AssetRow[]>();
