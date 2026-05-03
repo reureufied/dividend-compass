@@ -91,9 +91,9 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
   const reset = () => {
     setDate(new Date());
     setAssetName("");
-    setCategory("미국 ETF");
+    setCategory("한국 ETF");
     setAmount("");
-    setCurrency("USD");
+    setCurrency("KRW");
   };
 
   const numericAmount = parseFloat(amount);
