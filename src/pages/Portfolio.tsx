@@ -475,6 +475,7 @@ const Portfolio = () => {
                         <TableHead className="text-right">수익률</TableHead>
                         <TableHead className="text-right">목표 비중</TableHead>
                         <TableHead className="text-right">현재 비중</TableHead>
+                        <TableHead className="text-right w-[120px]">관리</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
