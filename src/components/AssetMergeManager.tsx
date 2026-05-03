@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Combine, Loader2, Sparkles } from "lucide-react";
+import { Combine, Loader2, Pencil, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,9 @@ export const AssetMergeManager = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [target, setTarget] = useState("");
   const [merging, setMerging] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameSource, setRenameSource] = useState("");
+  const [renameTo, setRenameTo] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -118,6 +121,37 @@ export const AssetMergeManager = () => {
     }
   };
 
+  const openRename = (name: string) => {
+    setRenameSource(name);
+    setRenameTo(name);
+    setRenameOpen(true);
+  };
+
+  const renameAsset = async () => {
+    const finalName = renameTo.trim();
+    if (!finalName) return toast.error("새 이름을 입력해주세요");
+    if (finalName === renameSource) {
+      setRenameOpen(false);
+      return;
+    }
+    setMerging(true);
+    try {
+      const [d, s] = await Promise.all([
+        supabase.from("dividends").update({ asset_name: finalName }).eq("asset_name", renameSource),
+        supabase.from("portfolio_snapshots").update({ asset_name: finalName }).eq("asset_name", renameSource),
+      ]);
+      if (d.error) throw d.error;
+      if (s.error) throw s.error;
+      toast.success(`"${renameSource}" → "${finalName}" 으로 변경되었습니다`);
+      setRenameOpen(false);
+      load();
+    } catch (err: any) {
+      toast.error(err?.message ?? "이름 변경 중 오류가 발생했어요");
+    } finally {
+      setMerging(false);
+    }
+  };
+
   return (
     <Card className="p-6 shadow-elev-sm">
       <div className="flex items-center justify-between gap-2 mb-2">
@@ -163,13 +197,14 @@ export const AssetMergeManager = () => {
               <TableHead className="text-right w-[80px]">배당</TableHead>
               <TableHead className="text-right w-[80px]">스냅샷</TableHead>
               <TableHead className="w-[200px]">유사 추천</TableHead>
+              <TableHead className="text-right w-[100px]">관리</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">불러오는 중…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">불러오는 중…</TableCell></TableRow>
             ) : rows.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">등록된 종목이 없어요</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">등록된 종목이 없어요</TableCell></TableRow>
             ) : rows.map((r) => (
               <TableRow key={r.name}>
                 <TableCell>
@@ -190,6 +225,11 @@ export const AssetMergeManager = () => {
                   ) : (
                     <span className="text-xs text-muted-foreground">—</span>
                   )}
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="sm" onClick={() => openRename(r.name)}>
+                    <Pencil className="h-4 w-4 mr-1" /> 이름 변경
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -230,6 +270,27 @@ export const AssetMergeManager = () => {
             <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={merging}>취소</Button>
             <Button onClick={merge} disabled={merging || !target.trim()}>
               {merging && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}병합 실행
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>종목명 변경</DialogTitle>
+            <DialogDescription>
+              "{renameSource}" 의 모든 기록(배당 & 스냅샷)을 새 이름으로 일괄 변경합니다.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-1.5">
+            <Label>새 이름</Label>
+            <Input value={renameTo} onChange={(e) => setRenameTo(e.target.value)} placeholder="새 종목명" />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameOpen(false)} disabled={merging}>취소</Button>
+            <Button onClick={renameAsset} disabled={merging || !renameTo.trim()}>
+              {merging && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}변경
             </Button>
           </DialogFooter>
         </DialogContent>

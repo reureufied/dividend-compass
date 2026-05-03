@@ -3,6 +3,7 @@ import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { useKnownAssetNames } from "@/hooks/useKnownAssetNames";
 import { findSimilarAsset } from "@/lib/assetMatch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AssetCombobox } from "@/components/AssetCombobox";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -193,10 +194,11 @@ export const BulkReviewDialog = ({ open, onOpenChange, rows, setRows, fxRate, on
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <Input
+                      <AssetCombobox
                         value={r.asset_name}
-                        onChange={(e) => update(i, { asset_name: e.target.value })}
-                        className="h-9"
+                        onChange={(v) => update(i, { asset_name: v })}
+                        options={knownNames}
+                        placeholder="종목 선택 또는 입력"
                       />
                       {(() => {
                         const sug = findSimilarAsset(r.asset_name, knownNames);
