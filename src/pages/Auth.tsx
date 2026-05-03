@@ -19,9 +19,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-// Internal-only domain used to back ID-based auth on top of Supabase email auth.
-const ID_DOMAIN = "local.compass";
-const usernameToEmail = (u: string) => `${u.trim().toLowerCase()}@${ID_DOMAIN}`;
+// Internal-only domains used to back ID-based auth on top of email auth.
+// Keep the legacy domain so accounts created before the ID-login update can still sign in.
+const ID_DOMAINS = ["local.compass", "id.local"] as const;
+const usernameToEmail = (u: string, domain: string = ID_DOMAINS[0]) => `${u.trim().toLowerCase()}@${domain}`;
+const usernameToLoginEmails = (u: string) => ID_DOMAINS.map((domain) => usernameToEmail(u, domain));
 
 const usernameSchema = z
   .string()
@@ -35,10 +37,17 @@ const passwordSchema = z
   .min(6, "비밀번호는 최소 6자 이상이어야 합니다")
   .max(72, "비밀번호는 72자 이하여야 합니다");
 
-const translateAuthError = (err: any, mode: "signin" | "signup"): string => {
-  const code = String(err?.code ?? "").toLowerCase();
-  const msg = String(err?.message ?? "").toLowerCase();
-  const status = err?.status;
+type AuthErrorLike = {
+  code?: string;
+  message?: string;
+  status?: number;
+};
+
+const translateAuthError = (err: unknown, mode: "signin" | "signup"): string => {
+  const authErr = (err ?? {}) as AuthErrorLike;
+  const code = String(authErr.code ?? "").toLowerCase();
+  const msg = String(authErr.message ?? "").toLowerCase();
+  const status = authErr.status;
 
   if (mode === "signup") {
     if (code === "user_already_exists" || msg.includes("already registered") || msg.includes("already been registered") || msg.includes("user already")) {
@@ -64,7 +73,7 @@ const translateAuthError = (err: any, mode: "signin" | "signup"): string => {
     }
   }
 
-  return err?.message ?? "오류가 발생했습니다";
+  return authErr.message ?? "오류가 발생했습니다";
 };
 
 type DialogState = {
@@ -134,14 +143,22 @@ const Auth = () => {
         }
         showDialog("가입 완료", "회원가입이 완료되었습니다. 대시보드로 이동합니다.", () => navigate("/"));
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password: p.data,
-        });
-        if (error) throw error;
+        let lastError: AuthErrorLike | null = null;
+        for (const loginEmail of usernameToLoginEmails(u.data)) {
+          const { error } = await supabase.auth.signInWithPassword({
+            email: loginEmail,
+            password: p.data,
+          });
+          if (!error) {
+            lastError = null;
+            break;
+          }
+          lastError = error;
+        }
+        if (lastError) throw lastError;
         navigate("/");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       const title = mode === "signup" ? "회원가입 실패" : "로그인 실패";
       showDialog(title, translateAuthError(err, mode));
     } finally {
