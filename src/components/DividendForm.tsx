@@ -220,6 +220,86 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
         )}
       </div>
 
+      {!editing && (
+        <div
+          className={cn(
+            "mb-5 rounded-xl border-2 border-dashed p-4 transition-smooth",
+            dragActive ? "border-primary bg-accent/40" : "border-border bg-secondary/40",
+            scanning && "opacity-90"
+          )}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragActive(true);
+          }}
+          onDragLeave={() => setDragActive(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragActive(false);
+            const f = e.dataTransfer.files?.[0];
+            if (f) handleScreenshot(f);
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <div className="h-10 w-10 rounded-xl bg-gradient-primary flex items-center justify-center shrink-0 shadow-elev-sm">
+              <Sparkles className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold">스크린샷으로 자동 입력</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                증권사 앱 스크린샷을 올리면 AI가 날짜·종목·금액·통화를 자동으로 채워드려요.
+              </p>
+
+              {scanPreview && (
+                <div className="mt-3 relative inline-block">
+                  <img
+                    src={scanPreview}
+                    alt="업로드한 스크린샷 미리보기"
+                    className="max-h-32 rounded-lg border border-border"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setScanPreview(null)}
+                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background border border-border shadow-elev-sm flex items-center justify-center hover:bg-secondary"
+                    aria-label="미리보기 제거"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleScreenshot(f);
+                    e.target.value = "";
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={scanning}
+                >
+                  {scanning ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <ImagePlus className="h-4 w-4 mr-2" />
+                  )}
+                  {scanning ? "AI가 배당 내역을 읽고 있어요… 🔍" : "스크린샷 업로드"}
+                </Button>
+                <span className="text-xs text-muted-foreground">또는 이 영역에 끌어다 놓기</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
         {/* Date */}
         <div className="space-y-2">
