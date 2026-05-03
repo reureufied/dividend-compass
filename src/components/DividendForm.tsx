@@ -176,35 +176,15 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
         body: { imageDataUrl: dataUrl },
       });
       if (error) throw error;
-      const r = (data as any)?.result;
-      if (!r) throw new Error("이미지에서 정보를 찾지 못했어요");
-
-      let filledCount = 0;
-      if (r.date) {
-        const d = new Date(r.date);
-        if (!isNaN(d.getTime())) {
-          setDate(d);
-          filledCount++;
-        }
+      const results = (data as any)?.results;
+      if (!Array.isArray(results) || results.length === 0) {
+        toast.error("배당 내역을 찾을 수 없습니다. 다시 촬영해 주세요.");
+        return;
       }
-      if (r.asset_name) {
-        setAssetName(String(r.asset_name));
-        filledCount++;
-      }
-      if (typeof r.amount === "number" && r.amount > 0) {
-        setAmount(String(r.amount));
-        filledCount++;
-      }
-      if (r.currency === "USD" || r.currency === "KRW") {
-        setCurrency(r.currency);
-        filledCount++;
-      }
-      if (r.category && (CATEGORIES as readonly string[]).includes(r.category)) {
-        setCategory(r.category as Category);
-        filledCount++;
-      }
-      if (filledCount === 0) toast.error("이미지에서 인식된 항목이 없어요. 직접 입력해 주세요.");
-      else toast.success("내역을 자동으로 채웠습니다. 맞는지 확인해 보세요!");
+      const drafts = results.map(toDraftRow);
+      setDraftRows(drafts);
+      setReviewOpen(true);
+      toast.success(`${drafts.length}건의 내역을 찾았어요. 검토 후 저장해 주세요!`);
     } catch (err: any) {
       toast.error(err?.message ?? "이미지 분석 중 오류가 발생했어요");
     } finally {
