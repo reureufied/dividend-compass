@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Dividend } from "@/lib/dividends";
 import { formatKRW } from "@/lib/fx";
-import { PortfolioEditor } from "@/components/PortfolioEditor";
+
 import { AssetMergeManager } from "@/components/AssetMergeManager";
 
 const goalSchema = z.object({
