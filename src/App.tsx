@@ -41,6 +41,7 @@ const App = () => (
               <Route path="/search" element={<SearchPage />} />
               <Route path="/analysis" element={<Analysis />} />
               <Route path="/portfolio" element={<Portfolio />} />
+              <Route path="/assets" element={<AssetManager />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
             <Route path="*" element={<NotFound />} />
