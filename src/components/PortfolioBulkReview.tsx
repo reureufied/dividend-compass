@@ -152,7 +152,12 @@ export const PortfolioBulkReview = ({
                 <TableRow key={i}>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <Input value={r.asset_name} onChange={(e) => update(i, { asset_name: e.target.value })} className="h-9" />
+                      <AssetCombobox
+                        value={r.asset_name}
+                        onChange={(v) => update(i, { asset_name: v })}
+                        options={knownNames}
+                        placeholder="종목 선택 또는 입력"
+                      />
                       {(() => {
                         const sug = findSimilarAsset(r.asset_name, knownNames);
                         if (!sug) return null;
