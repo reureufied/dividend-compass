@@ -3,6 +3,7 @@ import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { useKnownAssetNames } from "@/hooks/useKnownAssetNames";
 import { findSimilarAsset } from "@/lib/assetMatch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AssetCombobox } from "@/components/AssetCombobox";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
