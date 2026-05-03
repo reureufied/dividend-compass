@@ -131,8 +131,10 @@ const Settings = () => {
         </div>
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs text-muted-foreground">로그인된 이메일</p>
-            <p className="font-medium truncate">{user?.email}</p>
+            <p className="text-xs text-muted-foreground">로그인된 아이디</p>
+            <p className="font-medium truncate">
+              {(user?.user_metadata as any)?.username ?? user?.email?.split("@")[0]}
+            </p>
           </div>
           <Button variant="outline" onClick={handleSignOut}>
             <LogOut className="h-4 w-4 mr-2" />
