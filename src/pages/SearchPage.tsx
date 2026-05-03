@@ -30,6 +30,9 @@ import { formatKRW, formatUSD } from "@/lib/fx";
 
 const ALL = "__all__";
 
+type SortKey = "date" | "asset_name" | "category" | "amount";
+type SortDir = "asc" | "desc";
+
 const SearchPage = () => {
   const { user } = useAuth();
   const [items, setItems] = useState<Dividend[]>([]);
