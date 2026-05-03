@@ -12,6 +12,7 @@ import { DateFilterBar, DateRange, computeRange } from "@/components/DateFilterB
 import { Dividend } from "@/lib/dividends";
 import { filterByRange, groupForChart, sumKRW, topAssets } from "@/lib/analytics";
 import { formatKRW } from "@/lib/fx";
+import DpsTrendChart from "@/components/DpsTrendChart";
 
 const CHART_COLORS = [
   "hsl(var(--chart-1))",
