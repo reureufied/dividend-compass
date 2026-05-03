@@ -48,6 +48,8 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
   const [submitting, setSubmitting] = useState(false);
   const [rate, setRate] = useState<number | null>(null);
   const [rateFallback, setRateFallback] = useState(false);
+  const [assetOptions, setAssetOptions] = useState<string[]>([]);
+  const [assetOpen, setAssetOpen] = useState(false);
 
   useEffect(() => {
     getUsdKrwRate().then(({ rate, fallback }) => {
@@ -55,6 +57,18 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
       setRateFallback(fallback);
     });
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("dividends")
+      .select("asset_name")
+      .then(({ data }) => {
+        const set = new Set<string>();
+        (data ?? []).forEach((r: any) => r.asset_name && set.add(r.asset_name));
+        setAssetOptions(Array.from(set).sort((a, b) => a.localeCompare(b, "ko")));
+      });
+  }, [user]);
 
   useEffect(() => {
     if (editing) {
