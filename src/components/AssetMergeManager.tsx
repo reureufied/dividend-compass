@@ -364,34 +364,19 @@ export const AssetMergeManager = () => {
             {smartGroups.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-6">추천할 그룹이 없습니다 🎉</p>
             )}
-            {smartGroups.map((g, i) => {
-              const rep = g[0]?.name;
-              return (
-                <div key={i} className="rounded-lg border border-border p-3 space-y-2">
-                  <div className="flex flex-wrap gap-1">
-                    {g.map((row) => (
-                      <Badge key={row.name} variant={row.name === rep ? "default" : "outline"}>
-                        {row.name}
-                        <span className="ml-1 opacity-60">({row.dividends + row.snapshots})</span>
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs text-muted-foreground">
-                      추천 대표 이름: <b className="text-foreground">{rep}</b>
-                    </p>
-                    <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => ignoreGroup(g)}>
-                        <X className="h-4 w-4 mr-1" /> 다른 종목임
-                      </Button>
-                      <Button size="sm" onClick={() => { setSuggestOpen(false); openMerge(g.map((x) => x.name)); }}>
-                        <Sparkles className="h-4 w-4 mr-1" /> 하나로 합치기
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {smartGroups.map((g, i) => (
+              <SuggestionGroupCard
+                key={i}
+                group={g}
+                onIgnore={() => ignoreGroup(g)}
+                onMerge={(picked, rep) => {
+                  setSuggestOpen(false);
+                  setSelected(new Set(picked));
+                  setTarget(rep);
+                  setDialogOpen(true);
+                }}
+              />
+            ))}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSuggestOpen(false)}>닫기</Button>
@@ -399,5 +384,82 @@ export const AssetMergeManager = () => {
         </DialogContent>
       </Dialog>
     </Card>
+  );
+};
+
+interface SuggestionGroupCardProps {
+  group: AssetRow[];
+  onIgnore: () => void;
+  onMerge: (picked: string[], rep: string) => void;
+}
+
+const SuggestionGroupCard = ({ group, onIgnore, onMerge }: SuggestionGroupCardProps) => {
+  const defaultRep = group[0]?.name ?? "";
+  const [picked, setPicked] = useState<Set<string>>(() => new Set(group.map((g) => g.name)));
+  const [rep, setRep] = useState<string>(defaultRep);
+  const [customRep, setCustomRep] = useState<string>("");
+
+  const togglePick = (name: string) => {
+    const next = new Set(picked);
+    if (next.has(name)) next.delete(name); else next.add(name);
+    if (!next.has(rep) && next.size > 0) setRep(Array.from(next)[0]);
+    setPicked(next);
+  };
+
+  const finalRep = customRep.trim() || rep;
+  const canMerge = picked.size >= 2 && !!finalRep;
+
+  return (
+    <div className="rounded-lg border border-border p-3 space-y-3">
+      <div className="space-y-1.5">
+        <p className="text-xs font-medium text-muted-foreground">합칠 종목 선택</p>
+        <div className="flex flex-col gap-1.5">
+          {group.map((row) => (
+            <label key={row.name} className="flex items-center gap-2 text-sm cursor-pointer">
+              <Checkbox checked={picked.has(row.name)} onCheckedChange={() => togglePick(row.name)} />
+              <span className="font-medium">{row.name}</span>
+              <span className="text-xs text-muted-foreground">({row.dividends + row.snapshots}건)</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <p className="text-xs font-medium text-muted-foreground">대표 이름</p>
+        <div className="flex flex-wrap gap-1">
+          {Array.from(picked).map((name) => (
+            <Button
+              key={name}
+              type="button"
+              size="sm"
+              variant={!customRep && rep === name ? "default" : "outline"}
+              onClick={() => { setRep(name); setCustomRep(""); }}
+            >
+              {name}
+            </Button>
+          ))}
+        </div>
+        <Input
+          value={customRep}
+          onChange={(e) => setCustomRep(e.target.value)}
+          placeholder="또는 직접 입력 (예: 새 이름)"
+          className="h-8 text-sm"
+        />
+      </div>
+
+      <div className="flex items-center justify-between gap-2 pt-1">
+        <p className="text-xs text-muted-foreground truncate">
+          → <b className="text-foreground">{finalRep || "?"}</b> 로 통합
+        </p>
+        <div className="flex gap-1">
+          <Button size="sm" variant="ghost" onClick={onIgnore}>
+            <X className="h-4 w-4 mr-1" /> 다른 종목임
+          </Button>
+          <Button size="sm" disabled={!canMerge} onClick={() => onMerge(Array.from(picked), finalRep)}>
+            <Sparkles className="h-4 w-4 mr-1" /> 합치기
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
