@@ -49,6 +49,7 @@ export const PortfolioBulkReview = ({
   const { user } = useAuth();
   const [saving, setSaving] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
+  const knownNames = useKnownAssetNames();
 
   const update = (i: number, patch: Partial<HoldingDraft>) =>
     setRows(rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
