@@ -229,14 +229,42 @@ const Portfolio = () => {
 
   const deleteSnapshotDate = async (date: string) => {
     if (!user) return;
-    if (!confirm(`${date} 스냅샷 전체를 삭제할까요?`)) return;
+    setDateOpsLoading(true);
     const { error } = await supabase
       .from("portfolio_snapshots")
       .delete()
       .eq("user_id", user.id)
       .eq("snapshot_date", date);
+    setDateOpsLoading(false);
     if (error) return toast.error(error.message);
     toast.success("삭제되었어요");
+    setDeleteDateTarget(null);
+    loadSnaps();
+  };
+
+  const deleteHoldingRow = async (id: string) => {
+    const { error } = await supabase.from("portfolio_snapshots").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("삭제되었어요");
+    setDeleteRowId(null);
+    loadSnaps();
+  };
+
+  const updateSnapshotDate = async () => {
+    if (!user || !editDateTarget) return;
+    const newDate = format(editDateNew, "yyyy-MM-dd");
+    if (newDate === editDateTarget) { setEditDateTarget(null); return; }
+    setDateOpsLoading(true);
+    const { error } = await supabase
+      .from("portfolio_snapshots")
+      .update({ snapshot_date: newDate })
+      .eq("user_id", user.id)
+      .eq("snapshot_date", editDateTarget);
+    setDateOpsLoading(false);
+    if (error) return toast.error(error.message);
+    toast.success(`${editDateTarget} → ${newDate} 로 변경되었어요`);
+    if (selectedDate === editDateTarget) setSelectedDate(newDate);
+    setEditDateTarget(null);
     loadSnaps();
   };
 
