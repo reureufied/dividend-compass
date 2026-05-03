@@ -11,17 +11,29 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
-const credSchema = z.object({
-  email: z.string().trim().email("올바른 이메일을 입력해주세요").max(255),
-  password: z.string().min(6, "비밀번호는 6자 이상이어야 합니다").max(72),
-});
+// Internal-only domain used to back ID-based auth on top of Supabase email auth.
+const ID_DOMAIN = "id.local";
+const usernameToEmail = (u: string) => `${u.trim().toLowerCase()}@${ID_DOMAIN}`;
+
+const usernameSchema = z
+  .string()
+  .trim()
+  .min(3, "아이디는 3자 이상이어야 합니다")
+  .max(30, "아이디는 30자 이하여야 합니다")
+  .regex(/^[a-zA-Z0-9_.-]+$/, "영문, 숫자, _ . - 만 사용할 수 있습니다");
+
+const passwordSchema = z
+  .string()
+  .min(6, "비밀번호는 6자 이상이어야 합니다")
+  .max(72, "비밀번호는 72자 이하여야 합니다");
 
 const Auth = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
     document.title = "로그인 · Dividend Tracker";
@@ -30,26 +42,43 @@ const Auth = () => {
   if (loading) return null;
   if (user) return <Navigate to="/" replace />;
 
+  const passwordsMismatch =
+    confirmPassword.length > 0 && password !== confirmPassword;
+
   const handleSubmit = async (mode: "signin" | "signup") => {
-    const parsed = credSchema.safeParse({ email, password });
-    if (!parsed.success) {
-      toast.error(parsed.error.errors[0].message);
+    const u = usernameSchema.safeParse(username);
+    if (!u.success) {
+      toast.error(u.error.errors[0].message);
       return;
     }
+    const p = passwordSchema.safeParse(password);
+    if (!p.success) {
+      toast.error(p.error.errors[0].message);
+      return;
+    }
+    if (mode === "signup" && password !== confirmPassword) {
+      toast.error("비밀번호가 일치하지 않습니다");
+      return;
+    }
+
+    const email = usernameToEmail(u.data);
     setSubmitting(true);
     try {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
-          email: parsed.data.email,
-          password: parsed.data.password,
-          options: { emailRedirectTo: `${window.location.origin}/` },
+          email,
+          password: p.data,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+            data: { username: u.data },
+          },
         });
         if (error) throw error;
         toast.success("가입 완료! 대시보드로 이동합니다.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
-          email: parsed.data.email,
-          password: parsed.data.password,
+          email,
+          password: p.data,
         });
         if (error) throw error;
         toast.success("환영합니다 👋");
@@ -82,14 +111,16 @@ const Auth = () => {
             {(["signin", "signup"] as const).map((mode) => (
               <TabsContent key={mode} value={mode} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor={`email-${mode}`}>이메일</Label>
+                  <Label htmlFor={`username-${mode}`}>아이디</Label>
                   <Input
-                    id={`email-${mode}`}
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    autoComplete="email"
+                    id={`username-${mode}`}
+                    type="text"
+                    placeholder="예: dividend_king"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="username"
+                    autoCapitalize="none"
+                    spellCheck={false}
                   />
                 </div>
                 <div className="space-y-2">
@@ -103,9 +134,29 @@ const Auth = () => {
                     autoComplete={mode === "signin" ? "current-password" : "new-password"}
                   />
                 </div>
+                {mode === "signup" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">비밀번호 확인</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      autoComplete="new-password"
+                      aria-invalid={passwordsMismatch}
+                    />
+                    {passwordsMismatch && (
+                      <p className="text-sm text-destructive">비밀번호가 일치하지 않습니다</p>
+                    )}
+                  </div>
+                )}
                 <Button
                   onClick={() => handleSubmit(mode)}
-                  disabled={submitting}
+                  disabled={
+                    submitting ||
+                    (mode === "signup" && (passwordsMismatch || confirmPassword.length === 0))
+                  }
                   className="w-full bg-gradient-primary hover:opacity-90 transition-opacity h-11 text-base font-semibold shadow-elev-md"
                 >
                   {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
