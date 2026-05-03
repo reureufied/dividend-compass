@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Combine, Loader2, Sparkles } from "lucide-react";
+import { Combine, Loader2, Pencil, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
