@@ -53,7 +53,7 @@ const COLORS = [
   "hsl(160 60% 45%)",
 ];
 
-const Portfolio = () => {
+const PortfolioAnalysis = () => {
   const { user } = useAuth();
   const [snaps, setSnaps] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
