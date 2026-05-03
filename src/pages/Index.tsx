@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { DateFilterBar, DateRange, computeRange } from "@/components/DateFilterBar";
 import { Dividend } from "@/lib/dividends";
-import { filterByRange, groupByCategory, groupForChart, sumKRW, topAssets } from "@/lib/analytics";
+import { filterByRange, groupForChart, sumKRW, topAssets } from "@/lib/analytics";
 import { formatKRW } from "@/lib/fx";
 
 const CHART_COLORS = [
@@ -57,7 +57,18 @@ const Index = () => {
   const filtered = useMemo(() => filterByRange(items, range.from, range.to), [items, range]);
   const total = useMemo(() => sumKRW(filtered), [filtered]);
   const series = useMemo(() => groupForChart(filtered, range.from, range.to), [filtered, range]);
-  const byCategory = useMemo(() => groupByCategory(filtered), [filtered]);
+  const byAsset = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const d of filtered) {
+      const v = Number(d.amount_krw ?? (d.currency === "USD" ? Number(d.amount) * 1350 : Number(d.amount)));
+      map.set(d.asset_name, (map.get(d.asset_name) ?? 0) + v);
+    }
+    const arr = Array.from(map.entries()).map(([name, value]) => ({ name, value: Math.round(value) })).sort((a, b) => b.value - a.value);
+    if (arr.length <= 6) return arr;
+    const top = arr.slice(0, 5);
+    const other = arr.slice(5).reduce((s, x) => s + x.value, 0);
+    return [...top, { name: "기타", value: other }];
+  }, [filtered]);
   const top5 = useMemo(() => topAssets(filtered, 5), [filtered]);
   const top5Max = top5[0]?.total ?? 0;
 
@@ -169,18 +180,18 @@ const Index = () => {
 
         <Card className="p-6 shadow-elev-sm">
           <div className="flex items-center justify-between mb-1">
-            <h3 className="font-semibold">시장 비중</h3>
+            <h3 className="font-semibold">종목별 비중</h3>
             <PieIcon className="h-4 w-4 text-muted-foreground" />
           </div>
-          <p className="text-xs text-muted-foreground mb-4">카테고리별 분포</p>
+          <p className="text-xs text-muted-foreground mb-4">보유 종목별 분포</p>
           <div className="h-72">
-            {byCategory.length === 0 ? (
+            {byAsset.length === 0 ? (
               <EmptyChart message={loading ? "불러오는 중…" : "데이터가 없습니다"} />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={byCategory}
+                    data={byAsset}
                     dataKey="value"
                     nameKey="name"
                     innerRadius={55}
@@ -189,7 +200,7 @@ const Index = () => {
                     stroke="hsl(var(--card))"
                     strokeWidth={2}
                   >
-                    {byCategory.map((_, i) => (
+                    {byAsset.map((_, i) => (
                       <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                     ))}
                   </Pie>
