@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search as SearchIcon, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Search as SearchIcon, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
