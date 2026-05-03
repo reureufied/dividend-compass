@@ -274,6 +274,27 @@ export const AssetMergeManager = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>종목명 변경</DialogTitle>
+            <DialogDescription>
+              "{renameSource}" 의 모든 기록(배당 & 스냅샷)을 새 이름으로 일괄 변경합니다.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-1.5">
+            <Label>새 이름</Label>
+            <Input value={renameTo} onChange={(e) => setRenameTo(e.target.value)} placeholder="새 종목명" />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameOpen(false)} disabled={merging}>취소</Button>
+            <Button onClick={renameAsset} disabled={merging || !renameTo.trim()}>
+              {merging && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}변경
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
