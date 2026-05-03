@@ -50,6 +50,7 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
   const [rateFallback, setRateFallback] = useState(false);
   const [assetOptions, setAssetOptions] = useState<string[]>([]);
   const [assetOpen, setAssetOpen] = useState(false);
+  const [dateOpen, setDateOpen] = useState(false);
 
   useEffect(() => {
     getUsdKrwRate().then(({ rate, fallback }) => {
