@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
-import { Loader2, Trash2 } from "lucide-react";
+import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
+import { useKnownAssetNames } from "@/hooks/useKnownAssetNames";
+import { findSimilarAsset } from "@/lib/assetMatch";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -54,6 +57,7 @@ interface Props {
 export const BulkReviewDialog = ({ open, onOpenChange, rows, setRows, fxRate, onSaved }: Props) => {
   const { user } = useAuth();
   const [saving, setSaving] = useState(false);
+  const knownNames = useKnownAssetNames();
 
   const update = (idx: number, patch: Partial<DraftRow>) => {
     setRows(rows.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
@@ -188,11 +192,36 @@ export const BulkReviewDialog = ({ open, onOpenChange, rows, setRows, fxRate, on
                     />
                   </TableCell>
                   <TableCell>
-                    <Input
-                      value={r.asset_name}
-                      onChange={(e) => update(i, { asset_name: e.target.value })}
-                      className="h-9"
-                    />
+                    <div className="flex items-center gap-1">
+                      <Input
+                        value={r.asset_name}
+                        onChange={(e) => update(i, { asset_name: e.target.value })}
+                        className="h-9"
+                      />
+                      {(() => {
+                        const sug = findSimilarAsset(r.asset_name, knownNames);
+                        if (!sug) return null;
+                        return (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() => update(i, { asset_name: sug })}
+                                  className="shrink-0 inline-flex items-center justify-center h-7 w-7 rounded-md hover:bg-accent text-amber-500"
+                                  aria-label="유사 종목으로 교정"
+                                >
+                                  <AlertTriangle className="h-4 w-4" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                기존 종목 <span className="font-semibold">"{sug}"</span>과(와) 일치하나요? (클릭하여 교정)
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      })()}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Select value={r.category} onValueChange={(v) => update(i, { category: v as Category })}>

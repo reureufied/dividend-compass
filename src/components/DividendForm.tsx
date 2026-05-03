@@ -366,7 +366,12 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-popover" align="start">
-              <Command>
+              <Command
+                filter={(value, search) => {
+                  const norm = (s: string) => s.toLowerCase().replace(/\s+/g, "");
+                  return norm(value).includes(norm(search)) ? 1 : 0;
+                }}
+              >
                 <CommandInput
                   placeholder="검색하거나 새 종목 입력"
                   value={assetName}

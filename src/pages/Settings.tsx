@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Dividend } from "@/lib/dividends";
 import { formatKRW } from "@/lib/fx";
 import { PortfolioEditor } from "@/components/PortfolioEditor";
+import { AssetMergeManager } from "@/components/AssetMergeManager";
 
 const goalSchema = z.object({
   monthly_goal: z.number().min(0, "0 이상 입력해주세요").max(1_000_000_000_000),
@@ -204,6 +205,8 @@ const Settings = () => {
       </Card>
 
       <PortfolioEditor />
+
+      <AssetMergeManager />
 
       {/* Export */}
       <Card className="p-6 shadow-elev-sm">
