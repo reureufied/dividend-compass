@@ -191,15 +191,37 @@ const SearchPage = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>날짜</TableHead>
-                  <TableHead>종목</TableHead>
-                  <TableHead>분류</TableHead>
-                  <TableHead className="text-right">금액</TableHead>
+                  {([
+                    { k: "date" as const, label: "날짜", align: "" },
+                    { k: "asset_name" as const, label: "종목", align: "" },
+                    { k: "category" as const, label: "분류", align: "" },
+                    { k: "amount" as const, label: "금액", align: "text-right" },
+                  ]).map(({ k, label, align }) => (
+                    <TableHead key={k} className={align}>
+                      <button
+                        type="button"
+                        onClick={() => toggleSort(k)}
+                        className={cn(
+                          "inline-flex items-center gap-1 font-medium hover:text-foreground transition-smooth",
+                          sortKey === k ? "text-foreground" : "text-muted-foreground"
+                        )}
+                      >
+                        {label}
+                        {sortKey !== k ? (
+                          <ArrowUpDown className="h-3 w-3 opacity-40" />
+                        ) : sortDir === "asc" ? (
+                          <ArrowUp className="h-3 w-3" />
+                        ) : (
+                          <ArrowDown className="h-3 w-3" />
+                        )}
+                      </button>
+                    </TableHead>
+                  ))}
                   <TableHead className="text-right">원화 환산</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((d) => (
+                {sorted.map((d) => (
                   <TableRow key={d.id}>
                     <TableCell className="font-medium">
                       {format(new Date(d.date), "yyyy.MM.dd")}
