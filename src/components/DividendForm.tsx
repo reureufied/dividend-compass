@@ -328,7 +328,7 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
                   )}
                   {scanning ? "AI가 배당 내역을 읽고 있어요… 🔍" : "스크린샷 업로드"}
                 </Button>
-                <span className="text-xs text-muted-foreground">또는 이 영역에 끌어다 놓기</span>
+                <span className="text-xs text-muted-foreground">끌어다 놓기 · 붙여넣기(Ctrl+V) 지원</span>
               </div>
             </div>
           </div>
