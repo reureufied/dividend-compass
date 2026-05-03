@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { to: "/", label: "대시보드", icon: LayoutDashboard, end: true },
-  { to: "/add", label: "내역 입력", icon: PlusCircle },
+  { to: "/add", label: "배당 기록", icon: PlusCircle, highlight: true },
   { to: "/calendar", label: "캘린더", icon: Calendar },
   { to: "/settings", label: "마이페이지", icon: Settings },
 ];
