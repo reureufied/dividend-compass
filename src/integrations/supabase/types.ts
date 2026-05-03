@@ -50,6 +50,33 @@ export type Database = {
         }
         Relationships: []
       }
+      portfolio: {
+        Row: {
+          asset_name: string
+          created_at: string
+          id: string
+          principal: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          asset_name: string
+          created_at?: string
+          id?: string
+          principal?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          asset_name?: string
+          created_at?: string
+          id?: string
+          principal?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
