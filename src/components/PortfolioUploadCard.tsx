@@ -87,6 +87,7 @@ export const PortfolioUploadCard = ({ onSaved }: Props) => {
       toast.error(err?.message ?? "이미지 분석 중 오류가 발생했어요");
     } finally {
       setScanning(false);
+      inFlightRef.current = false;
     }
   };
 
