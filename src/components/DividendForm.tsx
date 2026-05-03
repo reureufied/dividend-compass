@@ -175,17 +175,47 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
       const { data, error } = await supabase.functions.invoke("parse-dividend-screenshot", {
         body: { imageDataUrl: dataUrl },
       });
-      if (error) throw error;
-      const results = (data as any)?.results;
-      if (!Array.isArray(results) || results.length === 0) {
-        toast.error("배당 내역을 찾을 수 없습니다. 다시 촬영해 주세요.");
+
+      // supabase-js puts non-2xx body inside error.context (a Response object)
+      let payload: any = data;
+      if (error) {
+        const ctx: Response | undefined = (error as any)?.context;
+        if (ctx && typeof ctx.json === "function") {
+          try {
+            payload = await ctx.json();
+          } catch {
+            payload = null;
+          }
+        }
+        console.error("parse-dividend-screenshot error", error, payload);
+      }
+
+      const results = payload?.results;
+      if (Array.isArray(results) && results.length > 0) {
+        const drafts = results.map(toDraftRow);
+        setDraftRows(drafts);
+        setReviewOpen(true);
+        toast.success(`${drafts.length}건의 내역을 찾았어요. 검토 후 저장해 주세요!`);
         return;
       }
-      const drafts = results.map(toDraftRow);
-      setDraftRows(drafts);
-      setReviewOpen(true);
-      toast.success(`${drafts.length}건의 내역을 찾았어요. 검토 후 저장해 주세요!`);
+
+      const code = payload?.code;
+      const msg = payload?.error;
+      if (code === "NO_API_KEY") {
+        toast.error("OpenAI API Key가 설정되지 않았습니다.");
+      } else if (code === "OCR_UNREADABLE") {
+        toast.error("이미지에서 글자를 읽을 수 없습니다.");
+      } else if (code === "NO_DIVIDENDS") {
+        toast.error("배당 내역을 찾을 수 없습니다. 다시 촬영해 주세요.");
+      } else if (code === "RATE_LIMIT") {
+        toast.error("AI 사용량이 많아요. 잠시 후 다시 시도해 주세요.");
+      } else if (code === "NO_CREDITS") {
+        toast.error("AI 크레딧이 부족합니다. 잠시 후 다시 시도해 주세요.");
+      } else {
+        toast.error(msg ?? "정보를 찾지 못했어요. 다시 시도해 주세요.");
+      }
     } catch (err: any) {
+      console.error("handleScreenshot fatal", err);
       toast.error(err?.message ?? "이미지 분석 중 오류가 발생했어요");
     } finally {
       setScanning(false);
