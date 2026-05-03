@@ -24,6 +24,8 @@ export interface HoldingDraft {
   avg_purchase_price: string;
   current_price: string;
   target_weight: string;
+  auto_mapped?: boolean;
+  original_name?: string;
 }
 
 interface Props {
