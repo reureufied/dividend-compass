@@ -3,6 +3,22 @@
 export const normalizeAsset = (s: string): string =>
   (s ?? "").toLowerCase().replace(/\s+/g, "").trim();
 
+// Known Korean asset-management issuer prefixes that often appear before the brand
+const ISSUER_PREFIXES = [
+  "한국투자", "미래에셋", "삼성", "kb", "신한", "nh아문디", "nh", "키움", "한화",
+  "하나", "교보", "우리", "흥국", "메리츠", "현대", "디비", "유진", "타임폴리오",
+  "에셋플러스", "트러스톤", "브이아이", "이스트스프링", "kim",
+];
+
+// Strip parentheses content (e.g. "(H)", "(합성)"), issuer prefix, and whitespace
+export const coreAssetName = (s: string): string => {
+  let n = normalizeAsset(s).replace(/\([^)]*\)/g, "");
+  for (const p of ISSUER_PREFIXES) {
+    if (n.startsWith(p)) { n = n.slice(p.length); break; }
+  }
+  return n.trim();
+};
+
 export const levenshtein = (a: string, b: string): number => {
   if (a === b) return 0;
   if (!a.length) return b.length;
@@ -24,13 +40,26 @@ export const levenshtein = (a: string, b: string): number => {
   return dp[b.length];
 };
 
-export const similarity = (a: string, b: string): number => {
-  const na = normalizeAsset(a);
-  const nb = normalizeAsset(b);
-  if (!na && !nb) return 1;
-  const max = Math.max(na.length, nb.length);
+const ratio = (a: string, b: string): number => {
+  if (!a && !b) return 1;
+  const max = Math.max(a.length, b.length);
   if (max === 0) return 1;
-  return 1 - levenshtein(na, nb) / max;
+  return 1 - levenshtein(a, b) / max;
+};
+
+export const similarity = (a: string, b: string): number => {
+  const base = ratio(normalizeAsset(a), normalizeAsset(b));
+  const ca = coreAssetName(a);
+  const cb = coreAssetName(b);
+  const core = ca && cb ? ratio(ca, cb) : 0;
+  let contain = 0;
+  if (ca && cb) {
+    const [shorter, longer] = ca.length <= cb.length ? [ca, cb] : [cb, ca];
+    if (shorter.length >= 4 && longer.includes(shorter)) {
+      contain = shorter.length / longer.length;
+    }
+  }
+  return Math.max(base, core, contain);
 };
 
 /**
