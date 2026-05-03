@@ -222,7 +222,25 @@ const Portfolio = () => {
     }
   };
 
-  const addEmptyRow = () => {
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            handleScreenshot(file);
+            return;
+          }
+        }
+      }
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
     setDraftRows([{ asset_name: "", quantity: "", avg_purchase_price: "", current_price: "", target_weight: "" }]);
     setReviewOpen(true);
   };
