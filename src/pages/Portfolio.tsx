@@ -241,6 +241,8 @@ const Portfolio = () => {
     return () => window.removeEventListener("paste", onPaste);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const addEmptyRow = () => {
     setDraftRows([{ asset_name: "", quantity: "", avg_purchase_price: "", current_price: "", target_weight: "" }]);
     setReviewOpen(true);
   };
