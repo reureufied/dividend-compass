@@ -27,6 +27,8 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { formatKRW } from "@/lib/fx";
 import { HoldingDraft, PortfolioBulkReview, toHoldingDraft } from "@/components/PortfolioBulkReview";
+import { useKnownAssetNames } from "@/hooks/useKnownAssetNames";
+import { normalizeAsset, similarity } from "@/lib/assetMatch";
 
 interface Snapshot {
   id: string;
