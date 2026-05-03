@@ -126,12 +126,37 @@ ${knownList.length > 0
     try { parsed = JSON.parse(argsStr); }
     catch { return json({ error: "AI 응답을 해석하지 못했어요.", code: "PARSE_ERROR" }, 500); }
 
-    const results = Array.isArray(parsed?.records) ? parsed.records : [];
+    const rawResults = Array.isArray(parsed?.records) ? parsed.records : [];
     const readable = parsed?.text_readable !== false;
-    if (!readable && results.length === 0)
+    if (!readable && rawResults.length === 0)
       return json({ error: "이미지에서 글자를 읽을 수 없습니다.", code: "OCR_UNREADABLE" }, 422);
-    if (results.length === 0)
+    if (rawResults.length === 0)
       return json({ error: "보유 종목 정보를 찾을 수 없습니다. 다시 촬영해 주세요.", code: "NO_HOLDINGS" }, 422);
+
+    // Post-process: derive unit prices from totals when missing (avoid divide-by-zero)
+    const results = rawResults.map((r: any) => {
+      const qty = Number(r?.quantity) || 0;
+      let avg = Number(r?.avg_purchase_price) || 0;
+      let cur = Number(r?.current_price) || 0;
+      const totalBuy = Number(r?.total_purchase_amount) || 0;
+      const evalAmt = Number(r?.evaluation_amount) || 0;
+      const computed: string[] = [];
+      if (avg <= 0 && totalBuy > 0 && qty > 0) {
+        avg = totalBuy / qty;
+        computed.push("avg_purchase_price");
+      }
+      if (cur <= 0 && evalAmt > 0 && qty > 0) {
+        cur = evalAmt / qty;
+        computed.push("current_price");
+      }
+      return {
+        asset_name: r?.asset_name ?? "",
+        quantity: qty,
+        avg_purchase_price: avg,
+        current_price: cur,
+        computed_fields: computed,
+      };
+    });
 
     return json({ results });
   } catch (e) {
