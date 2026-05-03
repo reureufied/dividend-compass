@@ -3,12 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
     <title>Lovable App</title>
     <meta name="description" content="Lovable Generated Project" />
     <meta name="author" content="Lovable" />
 
-    <!-- TODO: Update og:title to match your application name -->
     <meta property="og:title" content="Lovable App" />
     <meta property="og:description" content="Lovable Generated Project" />
     <meta property="og:type" content="website" />
@@ -18,28 +16,21 @@
     <meta name="twitter:site" content="@Lovable" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     <script type="text/javascript">
-      // GitHub Pages SPA: restore path forwarded by 404.html
+      // GitHub Pages SPA redirect: preserve the requested path and forward to index.html
       (function () {
-        if (window.location.search.indexOf("?/") === 0 || window.location.search.indexOf("&/") !== -1) {
-          var q = window.location.search.slice(1).split("&").map(function (s) {
-            return s.replace(/~and~/g, "&");
-          });
-          var route = q[0].slice(1);
-          var rest = q.slice(1).join("&");
-          window.history.replaceState(
-            null,
-            null,
-            window.location.pathname.replace(/\/$/, "") + "/" + route +
-              (rest ? "?" + rest : "") +
-              window.location.hash
+        var base = "/dividend-compass/";
+        var l = window.location;
+        if (l.pathname.indexOf(base) === 0) {
+          var path = l.pathname.slice(base.length);
+          l.replace(
+            l.protocol + "//" + l.host + base + "?/" +
+            path.replace(/&/g, "~and~") +
+            (l.search ? "&" + l.search.slice(1).replace(/&/g, "~and~") : "") +
+            l.hash
           );
         }
       })();
     </script>
   </head>
-
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <body></body>
 </html>
