@@ -218,6 +218,16 @@ export const AssetMergeManager = () => {
         OCR 오타·띄어쓰기로 분리된 종목을 하나로 합칠 수 있어요. 유사 종목은 자동으로 추천됩니다.
       </p>
 
+      {smartGroups.length > 0 && (
+        <div className="mb-4 flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3">
+          <div className="flex items-center gap-2 text-sm">
+            <Wand2 className="h-4 w-4 text-primary" />
+            <span>데이터 정리가 필요해 보입니다 — <b>{smartGroups.length}건</b>의 유사 종목 그룹이 발견되었어요.</span>
+          </div>
+          <Button size="sm" onClick={() => setSuggestOpen(true)}>추천 보기</Button>
+        </div>
+      )}
+
       {groups.length > 0 && (
         <div className="mb-4 space-y-2">
           <p className="text-xs font-medium text-muted-foreground">⚠️ 띄어쓰기/대소문자만 다른 그룹</p>
