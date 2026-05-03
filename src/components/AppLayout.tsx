@@ -75,7 +75,10 @@ export const AppLayout = () => {
       </div>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur-lg border-t border-border">
+      <nav
+        className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur-lg border-t border-border"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
         <div className="grid grid-cols-5">
           {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink
@@ -84,7 +87,7 @@ export const AppLayout = () => {
               end={end}
               className={({ isActive }) =>
                 cn(
-                  "flex flex-col items-center gap-1 py-2.5 text-xs transition-smooth",
+                  "flex flex-col items-center gap-1 py-2 text-[11px] transition-smooth",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )
               }
