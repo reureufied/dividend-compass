@@ -384,7 +384,7 @@ const Portfolio = () => {
               </SelectContent>
             </Select>
             {selectedDate && (
-              <Button variant="ghost" size="sm" onClick={() => deleteSnapshotDate(selectedDate)}>
+              <Button variant="ghost" size="sm" onClick={() => setDeleteDateTarget(selectedDate)}>
                 <Trash2 className="h-4 w-4 mr-1 text-destructive" /> 이 날짜 삭제
               </Button>
             )}
