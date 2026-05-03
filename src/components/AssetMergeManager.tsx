@@ -197,13 +197,14 @@ export const AssetMergeManager = () => {
               <TableHead className="text-right w-[80px]">배당</TableHead>
               <TableHead className="text-right w-[80px]">스냅샷</TableHead>
               <TableHead className="w-[200px]">유사 추천</TableHead>
+              <TableHead className="text-right w-[100px]">관리</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">불러오는 중…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">불러오는 중…</TableCell></TableRow>
             ) : rows.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">등록된 종목이 없어요</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">등록된 종목이 없어요</TableCell></TableRow>
             ) : rows.map((r) => (
               <TableRow key={r.name}>
                 <TableCell>
