@@ -193,6 +193,7 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
   };
 
   return (
+    <>
     <Card className="p-6 shadow-elev-sm">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-lg font-semibold">{editing ? "내역 수정" : "배당 내역 입력"}</h2>
