@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Check, ChevronsUpDown, ImagePlus, Loader2, Sparkles, X } from "lucide-react";
+import { CalendarIcon, Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -23,9 +23,6 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { CATEGORIES, Category, Currency, Dividend } from "@/lib/dividends";
 import { getUsdKrwRate, formatKRW } from "@/lib/fx";
-import { BulkReviewDialog, DraftRow, toDraftRow } from "@/components/BulkReviewDialog";
-import { useKnownAssetNames } from "@/hooks/useKnownAssetNames";
-import { normalizeAsset, similarity } from "@/lib/assetMatch";
 
 const schema = z.object({
   date: z.date(),
