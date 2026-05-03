@@ -117,12 +117,25 @@ const Auth = () => {
 
             {(["signin", "signup"] as const).map((mode) => (
               <TabsContent key={mode} value={mode} className="space-y-4">
+                {mode === "signup" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="display-name">이름</Label>
+                    <Input
+                      id="display-name"
+                      type="text"
+                      placeholder="예: 홍길동"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      maxLength={50}
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor={`username-${mode}`}>아이디</Label>
                   <Input
                     id={`username-${mode}`}
                     type="text"
-                    placeholder="예: dividend_king"
+                    placeholder="예: reureu"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     autoComplete="username"
@@ -141,19 +154,6 @@ const Auth = () => {
                     autoComplete={mode === "signin" ? "current-password" : "new-password"}
                   />
                 </div>
-                {mode === "signup" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="display-name">이름</Label>
-                    <Input
-                      id="display-name"
-                      type="text"
-                      placeholder="예: 홍길동"
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      maxLength={50}
-                    />
-                  </div>
-                )}
                 {mode === "signup" && (
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">비밀번호 확인</Label>
