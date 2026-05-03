@@ -4,6 +4,7 @@ import { AlertTriangle, CalendarIcon, Loader2, Trash2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useKnownAssetNames } from "@/hooks/useKnownAssetNames";
 import { findSimilarAsset } from "@/lib/assetMatch";
+import { AssetCombobox } from "@/components/AssetCombobox";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
