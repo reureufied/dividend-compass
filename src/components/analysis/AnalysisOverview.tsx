@@ -220,7 +220,7 @@ const AnalysisOverview = () => {
           icon={<Wallet className="h-4 w-4" />}
           label="총 자산 평가금액"
           value={formatKRW(Math.round(totals.value))}
-          hint={latestDate ? `기준일 ${latestDate}` : "스냅샷 없음"}
+          hint={latestDate ? `기준일 ${latestDate}` : "기록 없음"}
         />
         <SummaryCard
           icon={<Coins className="h-4 w-4" />}
@@ -246,10 +246,10 @@ const AnalysisOverview = () => {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-6 shadow-elev-sm">
           <h3 className="font-semibold mb-1">자산 비중</h3>
-          <p className="text-xs text-muted-foreground mb-4">최신 스냅샷 평가금액 기준</p>
+          <p className="text-xs text-muted-foreground mb-4">최신 기록 평가금액 기준</p>
           <div className="h-72">
             {allocation.length === 0 ? (
-              <Empty msg={loading ? "불러오는 중…" : "스냅샷이 없습니다"} />
+              <Empty msg={loading ? "불러오는 중…" : "기록이 없습니다"} />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -377,7 +377,7 @@ const AnalysisOverview = () => {
           <TabsContent value="assets" className="space-y-4">
             <div className="h-64">
               {monthlyAssets.length === 0 ? (
-                <Empty msg={loading ? "불러오는 중…" : "스냅샷이 없습니다"} />
+                <Empty msg={loading ? "불러오는 중…" : "기록이 없습니다"} />
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={monthlyAssets} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>

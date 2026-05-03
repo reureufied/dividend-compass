@@ -243,7 +243,7 @@ const PortfolioAnalysis = () => {
       <div>
         <h2 className="text-2xl font-bold tracking-tight">포트폴리오 분석</h2>
         <p className="text-muted-foreground text-sm mt-1">
-          월별 자산 스냅샷을 기록하고, 비중·수익률·시계열 변동을 분석하세요.
+          월별 자산 기록을 기록하고, 비중·수익률·시계열 변동을 분석하세요.
         </p>
       </div>
 
@@ -252,13 +252,13 @@ const PortfolioAnalysis = () => {
           <TabsTrigger value="point">특정 시점 분석</TabsTrigger>
           <TabsTrigger value="series">시계열 변동 분석</TabsTrigger>
           <TabsTrigger value="trend">종목별 추이 보기</TabsTrigger>
-          <TabsTrigger value="manage">스냅샷 관리</TabsTrigger>
+          <TabsTrigger value="manage">기록 관리</TabsTrigger>
         </TabsList>
 
         {/* ===== View 1 ===== */}
         <TabsContent value="point" className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm font-medium">기준 스냅샷 날짜</span>
+            <span className="text-sm font-medium">기준 기록 날짜</span>
             <Select value={selectedDate} onValueChange={setSelectedDate}>
               <SelectTrigger className="w-[220px]">
                 <SelectValue placeholder="날짜 선택" />
@@ -280,7 +280,7 @@ const PortfolioAnalysis = () => {
             <Card className="p-10 text-center text-muted-foreground">불러오는 중…</Card>
           ) : view1Rows.length === 0 ? (
             <Card className="p-10 text-center text-muted-foreground">
-              저장된 스냅샷이 없어요. 위에서 스크린샷을 업로드해 보세요.
+              저장된 기록이 없어요. 위에서 스크린샷을 업로드해 보세요.
             </Card>
           ) : (
             <>
@@ -425,7 +425,7 @@ const PortfolioAnalysis = () => {
             <div className="h-[320px]">
               {seriesData.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-                  해당 기간에 저장된 스냅샷이 없어요.
+                  해당 기간에 저장된 기록이 없어요.
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -457,9 +457,9 @@ const PortfolioAnalysis = () => {
             </div>
 
             {!focusAsset ? (
-              <p className="text-sm text-muted-foreground">종목을 선택하면 스냅샷 간 수량·투자원금 변동을 보여드려요.</p>
+              <p className="text-sm text-muted-foreground">종목을 선택하면 기록 간 수량·투자원금 변동을 보여드려요.</p>
             ) : !assetDiffs || assetDiffs.length === 0 ? (
-              <p className="text-sm text-muted-foreground">해당 종목의 스냅샷이 없어요.</p>
+              <p className="text-sm text-muted-foreground">해당 종목의 기록이 없어요.</p>
             ) : (
               <>
                 <div className="h-[260px] mb-4">
@@ -525,7 +525,7 @@ const PortfolioAnalysis = () => {
             {!trendAsset ? (
               <p className="text-sm text-muted-foreground">종목을 선택하면 전체 기간의 수량·평가금액·투자원금 추이를 보여드려요.</p>
             ) : trendRows.length === 0 ? (
-              <p className="text-sm text-muted-foreground">해당 종목의 스냅샷이 없어요.</p>
+              <p className="text-sm text-muted-foreground">해당 종목의 기록이 없어요.</p>
             ) : (
               <div className="grid gap-4 lg:grid-cols-2">
                 <div>
@@ -566,7 +566,7 @@ const PortfolioAnalysis = () => {
           {trendAsset && trendRows.length > 0 && (
             <Card className="p-0 overflow-hidden">
               <div className="flex items-center justify-between p-4">
-                <h3 className="font-semibold">{trendAsset} · 스냅샷 히스토리</h3>
+                <h3 className="font-semibold">{trendAsset} · 기록 히스토리</h3>
                 <Button variant="outline" size="sm" onClick={() => setTrendSortAsc((v) => !v)}>
                   날짜 {trendSortAsc ? "오름차순 ↑" : "내림차순 ↓"}
                 </Button>
@@ -607,12 +607,12 @@ const PortfolioAnalysis = () => {
         <TabsContent value="manage" className="space-y-4">
           <Card className="p-0 overflow-hidden">
             {distinctDates.length === 0 ? (
-              <div className="p-10 text-center text-muted-foreground">저장된 스냅샷이 없어요.</div>
+              <div className="p-10 text-center text-muted-foreground">저장된 기록이 없어요.</div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>스냅샷 날짜</TableHead>
+                    <TableHead>기록 날짜</TableHead>
                     <TableHead className="text-right">종목 수</TableHead>
                     <TableHead className="text-right">평가금액 합계</TableHead>
                     <TableHead className="text-right w-[260px]">관리</TableHead>
@@ -665,7 +665,7 @@ const PortfolioAnalysis = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>이 종목 기록을 삭제할까요?</AlertDialogTitle>
-            <AlertDialogDescription>해당 스냅샷에서 이 종목 행이 삭제됩니다.</AlertDialogDescription>
+            <AlertDialogDescription>해당 기록에서 이 종목 행이 삭제됩니다.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
@@ -680,7 +680,7 @@ const PortfolioAnalysis = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>해당 날짜의 모든 자산 기록을 삭제하시겠습니까?</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleteDateTarget} 스냅샷에 속한 모든 종목 행이 영구적으로 삭제됩니다.
+              {deleteDateTarget} 기록에 속한 모든 종목 행이 영구적으로 삭제됩니다.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -696,7 +696,7 @@ const PortfolioAnalysis = () => {
       <Dialog open={!!editDateTarget} onOpenChange={(o) => !o && setEditDateTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>스냅샷 날짜 일괄 변경</DialogTitle>
+            <DialogTitle>기록 날짜 일괄 변경</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">

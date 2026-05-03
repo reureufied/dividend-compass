@@ -251,7 +251,7 @@ export const AssetMergeManager = () => {
               <TableHead className="w-[40px]" />
               <TableHead>종목명</TableHead>
               <TableHead className="text-right w-[80px]">배당</TableHead>
-              <TableHead className="text-right w-[80px]">스냅샷</TableHead>
+              <TableHead className="text-right w-[80px]">기록</TableHead>
               <TableHead className="w-[200px]">유사 추천</TableHead>
               <TableHead className="text-right w-[100px]">관리</TableHead>
             </TableRow>
@@ -298,7 +298,7 @@ export const AssetMergeManager = () => {
           <DialogHeader>
             <DialogTitle>어떤 이름으로 통일하시겠습니까?</DialogTitle>
             <DialogDescription>
-              선택한 {selected.size}개 종목을 아래 대표 이름으로 일괄 변경합니다. (배당 내역 & 스냅샷 모두 적용)
+              선택한 {selected.size}개 종목을 아래 대표 이름으로 일괄 변경합니다. (배당 내역 & 기록 모두 적용)
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -336,7 +336,7 @@ export const AssetMergeManager = () => {
           <DialogHeader>
             <DialogTitle>종목명 변경</DialogTitle>
             <DialogDescription>
-              "{renameSource}" 의 모든 기록(배당 & 스냅샷)을 새 이름으로 일괄 변경합니다.
+              "{renameSource}" 의 모든 기록(배당 & 기록)을 새 이름으로 일괄 변경합니다.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-1.5">

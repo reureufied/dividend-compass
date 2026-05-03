@@ -104,7 +104,7 @@ const YieldAnalysis = () => {
       <header>
         <h2 className="text-2xl font-bold tracking-tight">수익률 분석</h2>
         <p className="text-muted-foreground mt-1 text-sm">
-          포트폴리오 스냅샷의 가장 최근 투자 원금과 누적 배당금을 결합해 자동으로 계산해요.
+          포트폴리오 기록의 가장 최근 투자 원금과 누적 배당금을 결합해 자동으로 계산해요.
         </p>
       </header>
 
@@ -120,7 +120,7 @@ const YieldAnalysis = () => {
             <div className="h-full flex items-center justify-center text-sm text-muted-foreground">불러오는 중…</div>
           ) : chartData.length === 0 ? (
             <div className="h-full rounded-xl bg-gradient-subtle border border-dashed border-border flex items-center justify-center text-sm text-muted-foreground text-center px-6">
-              포트폴리오 스냅샷 또는 배당 내역을 먼저 등록하면 자동으로 분석돼요.
+              포트폴리오 기록 또는 배당 내역을 먼저 등록하면 자동으로 분석돼요.
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
@@ -166,7 +166,7 @@ const YieldAnalysis = () => {
           <div className="p-10 text-center text-sm text-muted-foreground">불러오는 중…</div>
         ) : heldRows.length === 0 ? (
           <div className="p-10 text-center text-sm text-muted-foreground">
-            보유 종목 스냅샷이 아직 없어요. 포트폴리오 페이지에서 스냅샷을 등록해 주세요.
+            보유 종목 기록이 아직 없어요. 포트폴리오 페이지에서 기록을 등록해 주세요.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -216,7 +216,7 @@ const YieldAnalysis = () => {
             <div className="p-6 pb-2">
               <h4 className="font-semibold text-sm">매도 후에도 누적된 배당금</h4>
               <p className="text-xs text-muted-foreground mt-0.5">
-                현재 보유 스냅샷이 없는 종목이에요. 과거에 받은 배당금만 합산해 표시합니다.
+                현재 보유 기록이 없는 종목이에요. 과거에 받은 배당금만 합산해 표시합니다.
               </p>
             </div>
             <div className="overflow-x-auto">
