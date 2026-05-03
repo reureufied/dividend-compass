@@ -26,11 +26,15 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
+      - name: Create .env for build
+        run: |
+          cat > .env << 'EOF'
+          VITE_SUPABASE_PROJECT_ID="fagtxhenqbzcnqwtjtlt"
+          VITE_SUPABASE_PUBLISHABLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhZ3R4aGVucWJ6Y25xd3RqdGx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTY3MDksImV4cCI6MjA5MzMzMjcwOX0.rBHNBNJqrnGALRpd7GxlXab7QY5r-aalNE1nOi9owV8"
+          VITE_SUPABASE_URL="https://fagtxhenqbzcnqwtjtlt.supabase.co"
+          EOF
+
       - name: Build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
         run: bun run build
 
 
