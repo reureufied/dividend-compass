@@ -159,7 +159,7 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
         {/* Date */}
         <div className="space-y-2">
           <Label>날짜</Label>
-          <Popover>
+          <Popover open={dateOpen} onOpenChange={setDateOpen}>
             <PopoverTrigger asChild>
               <Button
                 type="button"
@@ -174,7 +174,12 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
               <Calendar
                 mode="single"
                 selected={date}
-                onSelect={(d) => d && setDate(d)}
+                onSelect={(d) => {
+                  if (d) {
+                    setDate(d);
+                    setDateOpen(false);
+                  }
+                }}
                 initialFocus
                 className={cn("p-3 pointer-events-auto")}
               />
