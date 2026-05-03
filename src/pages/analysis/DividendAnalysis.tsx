@@ -81,8 +81,8 @@ const DividendAnalysis = () => {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight">대시보드</h1>
-        <p className="text-muted-foreground mt-1">선택한 기간의 배당 성과를 한눈에 확인하세요</p>
+        <h2 className="text-2xl font-bold tracking-tight">배당금 분석</h2>
+        <p className="text-muted-foreground mt-1 text-sm">선택한 기간의 배당 성과를 한눈에 확인하세요</p>
       </header>
 
       <Card className="p-4 shadow-elev-sm animate-fade-in">
