@@ -203,6 +203,8 @@ const Settings = () => {
         </form>
       </Card>
 
+      <PortfolioEditor />
+
       {/* Export */}
       <Card className="p-6 shadow-elev-sm">
         <div className="flex items-center gap-2 mb-2">
