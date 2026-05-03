@@ -51,6 +51,10 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
   const [assetOptions, setAssetOptions] = useState<string[]>([]);
   const [assetOpen, setAssetOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [scanPreview, setScanPreview] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     getUsdKrwRate().then(({ rate, fallback }) => {
