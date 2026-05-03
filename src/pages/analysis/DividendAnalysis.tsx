@@ -258,6 +258,8 @@ const DividendAnalysis = () => {
           </ul>
         )}
       </Card>
+
+      <DpsTrendChart />
     </div>
   );
 };
