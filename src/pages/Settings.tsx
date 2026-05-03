@@ -204,7 +204,7 @@ const Settings = () => {
         </form>
       </Card>
 
-      <PortfolioEditor />
+      
 
       <AssetMergeManager />
 
