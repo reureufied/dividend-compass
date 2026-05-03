@@ -13,11 +13,14 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { imageDataUrl } = await req.json().catch(() => ({}));
+    const { imageDataUrl, knownAssetNames } = await req.json().catch(() => ({}));
     if (!imageDataUrl || typeof imageDataUrl !== "string" || !imageDataUrl.startsWith("data:image/")) {
       console.error("Invalid imageDataUrl payload");
       return json({ error: "이미지 파일이 올바르지 않습니다.", code: "BAD_IMAGE" }, 400);
     }
+    const knownList: string[] = Array.isArray(knownAssetNames)
+      ? knownAssetNames.filter((n) => typeof n === "string" && n.trim()).slice(0, 500)
+      : [];
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -45,7 +48,12 @@ Deno.serve(async (req) => {
 [중요]
 - 반드시 fill_dividends 도구를 호출.
 - 배당 내역이 한 건도 없으면 records: [] 로 호출.
-- 추측·환각 금지. 화면에서 보이는 값만 사용.`;
+- 추측·환각 금지. 화면에서 보이는 값만 사용.
+
+[기존 보유 종목 리스트 — 매우 중요]
+${knownList.length > 0
+  ? `다음은 사용자가 이미 보유/기록한 종목명 목록입니다. 이미지에서 종목명을 추출할 때 띄어쓰기·영문/한글 혼용·약어 등 표현이 살짝 다르더라도 의미상 같은 종목이라면 반드시 아래 리스트에 있는 정확한 이름 그대로 출력하세요.\n${knownList.map((n) => `- ${n}`).join("\n")}`
+  : "(등록된 기존 종목 없음 — 화면에서 보이는 이름 그대로 추출)"}`;
 
     const tools = [
       {
