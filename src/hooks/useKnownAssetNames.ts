@@ -7,8 +7,8 @@ export const useKnownAssetNames = (): string[] => {
     let cancelled = false;
     (async () => {
       const [a, b] = await Promise.all([
-        supabase.from("dividends").select("asset_name"),
-        supabase.from("portfolio_snapshots").select("asset_name"),
+        supabase.from("dividends").select("asset_name").limit(10000),
+        supabase.from("portfolio_snapshots").select("asset_name").limit(10000),
       ]);
       const set = new Set<string>();
       (a.data ?? []).forEach((r: any) => r.asset_name && set.add(r.asset_name));
