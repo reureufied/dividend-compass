@@ -67,6 +67,27 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
   }, []);
 
   useEffect(() => {
+    if (editing) return;
+    const onPaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            handleScreenshot(file);
+            return;
+          }
+        }
+      }
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing]);
+
+  useEffect(() => {
     if (!user) return;
     supabase
       .from("dividends")
@@ -260,7 +281,7 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold">스크린샷으로 자동 입력</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                증권사 앱 스크린샷을 올리면 AI가 날짜·종목·금액·통화를 자동으로 채워드려요.
+                증권사 앱 스크린샷을 올리거나 캡처 후 여기에 붙여넣기(Ctrl+V / Cmd+V) 하세요. AI가 날짜·종목·금액·통화를 자동으로 채워드려요.
               </p>
 
               {scanPreview && (
@@ -307,7 +328,7 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
                   )}
                   {scanning ? "AI가 배당 내역을 읽고 있어요… 🔍" : "스크린샷 업로드"}
                 </Button>
-                <span className="text-xs text-muted-foreground">또는 이 영역에 끌어다 놓기</span>
+                <span className="text-xs text-muted-foreground">끌어다 놓기 · 붙여넣기(Ctrl+V) 지원</span>
               </div>
             </div>
           </div>

@@ -222,6 +222,26 @@ const Portfolio = () => {
     }
   };
 
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            handleScreenshot(file);
+            return;
+          }
+        }
+      }
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const addEmptyRow = () => {
     setDraftRows([{ asset_name: "", quantity: "", avg_purchase_price: "", current_price: "", target_weight: "" }]);
     setReviewOpen(true);
@@ -325,7 +345,7 @@ const Portfolio = () => {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold">증권사 자산 화면 스크린샷으로 자동 입력</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                보유 종목·수량·매수단가·현재단가를 AI가 추출해 드려요. 목표 비중은 직접 입력해 주세요.
+                클릭하여 파일을 선택하거나, 캡처 후 여기에 붙여넣기(Ctrl+V / Cmd+V) 하세요. 보유 종목·수량·매수단가·현재단가를 AI가 추출해 드려요. 목표 비중은 직접 입력해 주세요.
               </p>
               {scanPreview && (
                 <div className="mt-3 relative inline-block">
@@ -355,7 +375,7 @@ const Portfolio = () => {
                   {scanning ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ImagePlus className="h-4 w-4 mr-2" />}
                   {scanning ? "AI가 자산 내역을 읽고 있어요… 🔍" : "스크린샷 업로드"}
                 </Button>
-                <span className="text-xs text-muted-foreground">또는 이 영역에 끌어다 놓기</span>
+                <span className="text-xs text-muted-foreground">끌어다 놓기 · 붙여넣기(Ctrl+V) 지원</span>
               </div>
             </div>
           </div>
