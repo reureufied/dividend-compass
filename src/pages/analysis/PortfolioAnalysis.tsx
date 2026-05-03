@@ -53,16 +53,7 @@ const PortfolioAnalysis = () => {
   const { user } = useAuth();
   const [snaps, setSnaps] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
-  const knownNames = useKnownAssetNames();
 
-  // Upload / OCR
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [scanning, setScanning] = useState(false);
-  const [reviewOpen, setReviewOpen] = useState(false);
-  const [draftRows, setDraftRows] = useState<HoldingDraft[]>([]);
-  const [snapshotDate, setSnapshotDate] = useState<Date>(new Date());
-  const [dragActive, setDragActive] = useState(false);
-  const [scanPreview, setScanPreview] = useState<string | null>(null);
 
   // View 1: selected date
   const [selectedDate, setSelectedDate] = useState<string>("");
