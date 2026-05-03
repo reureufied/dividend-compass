@@ -13,11 +13,14 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { imageDataUrl } = await req.json().catch(() => ({}));
+    const { imageDataUrl, knownAssetNames } = await req.json().catch(() => ({}));
     if (!imageDataUrl || typeof imageDataUrl !== "string" || !imageDataUrl.startsWith("data:image/")) {
       console.error("Invalid imageDataUrl payload");
       return json({ error: "이미지 파일이 올바르지 않습니다.", code: "BAD_IMAGE" }, 400);
     }
+    const knownList: string[] = Array.isArray(knownAssetNames)
+      ? knownAssetNames.filter((n) => typeof n === "string" && n.trim()).slice(0, 500)
+      : [];
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
