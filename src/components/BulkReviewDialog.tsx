@@ -147,6 +147,7 @@ export const BulkReviewDialog = ({ open, onOpenChange, rows, setRows, fxRate, on
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
