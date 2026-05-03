@@ -44,7 +44,7 @@ const Settings = () => {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    document.title = "마이페이지 · Dividend Tracker";
+    document.title = "마이페이지 · Portfolio Lab";
   }, []);
 
   useEffect(() => {

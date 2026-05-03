@@ -30,7 +30,7 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.title = "대시보드 · Dividend Tracker";
+    document.title = "대시보드 · Portfolio Lab";
   }, []);
 
   useEffect(() => {

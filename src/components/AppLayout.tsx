@@ -30,7 +30,7 @@ export const AppLayout = () => {
             <div className="h-9 w-9 rounded-xl bg-gradient-primary flex items-center justify-center shadow-elev-md">
               <TrendingUp className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="font-bold text-lg tracking-tight">Dividend Tracker</span>
+            <span className="font-bold text-lg tracking-tight">Portfolio Lab</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden sm:inline text-sm text-muted-foreground">

@@ -72,7 +72,7 @@ const CalendarPage = () => {
   const [savingEvent, setSavingEvent] = useState(false);
 
   useEffect(() => {
-    document.title = "캘린더 · Dividend Tracker";
+    document.title = "캘린더 · Portfolio Lab";
   }, []);
 
   const loadAll = () => {
