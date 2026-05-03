@@ -375,7 +375,7 @@ const Portfolio = () => {
                   {scanning ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ImagePlus className="h-4 w-4 mr-2" />}
                   {scanning ? "AI가 자산 내역을 읽고 있어요… 🔍" : "스크린샷 업로드"}
                 </Button>
-                <span className="text-xs text-muted-foreground">또는 이 영역에 끌어다 놓기</span>
+                <span className="text-xs text-muted-foreground">끌어다 놓기 · 붙여넣기(Ctrl+V) 지원</span>
               </div>
             </div>
           </div>
