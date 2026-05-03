@@ -9,6 +9,7 @@ const navItems = [
   { to: "/add", label: "배당 기록", icon: PlusCircle, highlight: true },
   { to: "/calendar", label: "캘린더", icon: Calendar },
   { to: "/analysis", label: "수익률 분석", icon: BarChart3 },
+  { to: "/portfolio", label: "포트폴리오", icon: PieChart },
   { to: "/search", label: "상세 검색", icon: Search },
   { to: "/settings", label: "마이페이지", icon: Settings },
 ];
