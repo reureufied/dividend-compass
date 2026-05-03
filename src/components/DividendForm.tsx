@@ -281,7 +281,7 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold">스크린샷으로 자동 입력</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                증권사 앱 스크린샷을 올리면 AI가 날짜·종목·금액·통화를 자동으로 채워드려요.
+                증권사 앱 스크린샷을 올리거나 캡처 후 여기에 붙여넣기(Ctrl+V / Cmd+V) 하세요. AI가 날짜·종목·금액·통화를 자동으로 채워드려요.
               </p>
 
               {scanPreview && (
