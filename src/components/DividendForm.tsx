@@ -456,5 +456,14 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
         </div>
       </form>
     </Card>
+    <BulkReviewDialog
+      open={reviewOpen}
+      onOpenChange={setReviewOpen}
+      rows={draftRows}
+      setRows={setDraftRows}
+      fxRate={rate ?? 1350}
+      onSaved={onSaved}
+    />
+    </>
   );
 };
