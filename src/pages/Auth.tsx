@@ -53,8 +53,11 @@ const translateAuthError = (err: unknown, mode: "signin" | "signup"): string => 
     if (code === "user_already_exists" || msg.includes("already registered") || msg.includes("already been registered") || msg.includes("user already")) {
       return "이미 가입된 아이디입니다. 로그인해 주세요.";
     }
-    if (code === "weak_password" || msg.includes("password should be at least") || msg.includes("password is too short")) {
+    if (msg.includes("password should be at least") || msg.includes("password is too short")) {
       return "비밀번호는 최소 6자 이상이어야 합니다.";
+    }
+    if (code === "weak_password" || msg.includes("pwned") || msg.includes("compromised") || msg.includes("leaked")) {
+      return "보안에 취약하거나 유출 이력이 있는 비밀번호입니다. 다른 비밀번호를 사용해 주세요.";
     }
     if (msg.includes("rate limit") || status === 429) {
       return "요청이 너무 많아요. 잠시 후 다시 시도해 주세요.";
