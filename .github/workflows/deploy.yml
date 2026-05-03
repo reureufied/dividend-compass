@@ -28,12 +28,10 @@ jobs:
 
       - name: Build
         env:
-          # For project pages (https://<user>.github.io/<repo>/), set base to "/<repo>/"
-          BASE_PATH: /${{ github.event.repository.name }}/
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
-        run: bun run build -- --base=$BASE_PATH
+        run: bun run build
 
       - name: SPA fallback (copy index.html to 404.html)
         run: cp dist/index.html dist/404.html
