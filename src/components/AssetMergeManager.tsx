@@ -226,6 +226,11 @@ export const AssetMergeManager = () => {
                     <span className="text-xs text-muted-foreground">—</span>
                   )}
                 </TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="sm" onClick={() => openRename(r.name)}>
+                    <Pencil className="h-4 w-4 mr-1" /> 이름 변경
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
