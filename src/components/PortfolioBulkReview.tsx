@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import { AlertTriangle, CalendarIcon, Loader2, Sparkles, Trash2 } from "lucide-react";
+import { AlertTriangle, CalendarIcon, Calculator, Loader2, Sparkles, Trash2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useKnownAssetNames } from "@/hooks/useKnownAssetNames";
 import { findSimilarAsset } from "@/lib/assetMatch";
@@ -26,6 +26,7 @@ export interface HoldingDraft {
   target_weight: string;
   auto_mapped?: boolean;
   original_name?: string;
+  computed_fields?: string[];
 }
 
 interface Props {
@@ -44,6 +45,7 @@ export const toHoldingDraft = (r: any): HoldingDraft => ({
   avg_purchase_price: r?.avg_purchase_price > 0 ? String(r.avg_purchase_price) : "",
   current_price: r?.current_price > 0 ? String(r.current_price) : "",
   target_weight: "",
+  computed_fields: Array.isArray(r?.computed_fields) ? r.computed_fields : [],
 });
 
 export const PortfolioBulkReview = ({
@@ -130,6 +132,24 @@ export const PortfolioBulkReview = ({
           </Popover>
         </div>
 
+        {(() => {
+          const computedRows = rows.filter((r) => (r.computed_fields?.length ?? 0) > 0);
+          if (computedRows.length === 0) return null;
+          return (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm flex gap-2 items-start">
+              <Calculator className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium text-foreground">
+                  {computedRows.length}건의 단가가 자동 계산되었어요
+                </p>
+                <p className="text-muted-foreground text-xs mt-0.5">
+                  스크린샷에 단가가 없어 <span className="font-medium">매수금액 ÷ 수량</span> 또는 <span className="font-medium">평가금액 ÷ 수량</span>으로 계산했어요. 계산된 셀은 <Calculator className="inline h-3 w-3 text-primary" /> 아이콘으로 표시됩니다.
+                </p>
+              </div>
+            </div>
+          );
+        })()}
+
         <div className="max-h-[55vh] overflow-auto rounded-lg border border-border">
           <Table>
             <TableHeader>
@@ -204,10 +224,34 @@ export const PortfolioBulkReview = ({
                     <Input type="number" step="any" value={r.quantity} onChange={(e) => update(i, { quantity: e.target.value })} className="h-9" />
                   </TableCell>
                   <TableCell>
-                    <Input type="number" step="any" value={r.avg_purchase_price} onChange={(e) => update(i, { avg_purchase_price: e.target.value })} className="h-9" />
+                    <div className="relative">
+                      <Input type="number" step="any" value={r.avg_purchase_price} onChange={(e) => update(i, { avg_purchase_price: e.target.value, computed_fields: r.computed_fields?.filter((f) => f !== "avg_purchase_price") })} className={cn("h-9", r.computed_fields?.includes("avg_purchase_price") && "pr-8 border-primary/50")} />
+                      {r.computed_fields?.includes("avg_purchase_price") && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Calculator className="h-3.5 w-3.5 text-primary absolute right-2 top-1/2 -translate-y-1/2 pointer-events-auto" />
+                            </TooltipTrigger>
+                            <TooltipContent>매수금액 ÷ 수량으로 자동 계산됨</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <Input type="number" step="any" value={r.current_price} onChange={(e) => update(i, { current_price: e.target.value })} className="h-9" />
+                    <div className="relative">
+                      <Input type="number" step="any" value={r.current_price} onChange={(e) => update(i, { current_price: e.target.value, computed_fields: r.computed_fields?.filter((f) => f !== "current_price") })} className={cn("h-9", r.computed_fields?.includes("current_price") && "pr-8 border-primary/50")} />
+                      {r.computed_fields?.includes("current_price") && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Calculator className="h-3.5 w-3.5 text-primary absolute right-2 top-1/2 -translate-y-1/2 pointer-events-auto" />
+                            </TooltipTrigger>
+                            <TooltipContent>평가금액 ÷ 수량으로 자동 계산됨</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Input type="number" step="any" placeholder="0" value={r.target_weight} onChange={(e) => update(i, { target_weight: e.target.value })} className="h-9" />
