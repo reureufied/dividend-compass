@@ -9,10 +9,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Internal-only domain used to back ID-based auth on top of Supabase email auth.
-const ID_DOMAIN = "id.local";
+const ID_DOMAIN = "local.compass";
 const usernameToEmail = (u: string) => `${u.trim().toLowerCase()}@${ID_DOMAIN}`;
 
 const usernameSchema = z
@@ -24,7 +32,7 @@ const usernameSchema = z
 
 const passwordSchema = z
   .string()
-  .min(6, "비밀번호는 6자 이상이어야 합니다")
+  .min(6, "비밀번호는 최소 6자 이상이어야 합니다")
   .max(72, "비밀번호는 72자 이하여야 합니다");
 
 const translateAuthError = (err: any, mode: "signin" | "signup"): string => {
@@ -32,7 +40,6 @@ const translateAuthError = (err: any, mode: "signin" | "signup"): string => {
   const msg = String(err?.message ?? "").toLowerCase();
   const status = err?.status;
 
-  // Sign up
   if (mode === "signup") {
     if (code === "user_already_exists" || msg.includes("already registered") || msg.includes("already been registered") || msg.includes("user already")) {
       return "이미 가입된 아이디입니다. 로그인해 주세요.";
@@ -45,7 +52,6 @@ const translateAuthError = (err: any, mode: "signin" | "signup"): string => {
     }
   }
 
-  // Sign in
   if (mode === "signin") {
     if (code === "invalid_credentials" || msg.includes("invalid login credentials") || msg.includes("invalid_grant")) {
       return "아이디 또는 비밀번호가 일치하지 않습니다.";
@@ -61,6 +67,13 @@ const translateAuthError = (err: any, mode: "signin" | "signup"): string => {
   return err?.message ?? "오류가 발생했습니다";
 };
 
+type DialogState = {
+  open: boolean;
+  title: string;
+  description: string;
+  onClose?: () => void;
+};
+
 const Auth = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -69,6 +82,11 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [dialog, setDialog] = useState<DialogState>({ open: false, title: "", description: "" });
+
+  const showDialog = (title: string, description: string, onClose?: () => void) => {
+    setDialog({ open: true, title, description, onClose });
+  };
 
   useEffect(() => {
     document.title = "로그인 · Portfolio Lab";
@@ -83,16 +101,16 @@ const Auth = () => {
   const handleSubmit = async (mode: "signin" | "signup") => {
     const u = usernameSchema.safeParse(username);
     if (!u.success) {
-      toast.error(u.error.errors[0].message);
+      showDialog("아이디 확인", u.error.errors[0].message);
       return;
     }
     const p = passwordSchema.safeParse(password);
     if (!p.success) {
-      toast.error(p.error.errors[0].message);
+      showDialog("비밀번호 확인", p.error.errors[0].message);
       return;
     }
     if (mode === "signup" && password !== confirmPassword) {
-      toast.error("비밀번호가 일치하지 않습니다");
+      showDialog("비밀번호 확인", "비밀번호가 일치하지 않습니다.");
       return;
     }
 
@@ -110,23 +128,22 @@ const Auth = () => {
           },
         });
         if (error) throw error;
-        // Best-effort: update profiles.display_name (trigger creates the row)
         const uid = signUpData.user?.id;
         if (uid) {
           await supabase.from("profiles").update({ display_name: name }).eq("id", uid);
         }
-        toast.success("가입 완료! 대시보드로 이동합니다.");
+        showDialog("가입 완료", "회원가입이 완료되었습니다. 대시보드로 이동합니다.", () => navigate("/"));
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password: p.data,
         });
         if (error) throw error;
-        toast.success("환영합니다 👋");
+        navigate("/");
       }
-      navigate("/");
     } catch (err: any) {
-      toast.error(translateAuthError(err, mode));
+      const title = mode === "signup" ? "회원가입 실패" : "로그인 실패";
+      showDialog(title, translateAuthError(err, mode));
     } finally {
       setSubmitting(false);
     }
@@ -187,6 +204,9 @@ const Auth = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete={mode === "signin" ? "current-password" : "new-password"}
                   />
+                  {mode === "signup" && (
+                    <p className="text-xs text-muted-foreground">최소 6자 이상 입력해 주세요.</p>
+                  )}
                 </div>
                 {mode === "signup" && (
                   <div className="space-y-2">
@@ -225,6 +245,35 @@ const Auth = () => {
           배당 내역을 안전하게 기록하고 분석하세요
         </p>
       </div>
+
+      <AlertDialog
+        open={dialog.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            const cb = dialog.onClose;
+            setDialog((d) => ({ ...d, open: false }));
+            cb?.();
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{dialog.title}</AlertDialogTitle>
+            <AlertDialogDescription>{dialog.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={() => {
+                const cb = dialog.onClose;
+                setDialog((d) => ({ ...d, open: false }));
+                cb?.();
+              }}
+            >
+              확인
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 };
