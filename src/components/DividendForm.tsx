@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { CalendarIcon, Check, ChevronsUpDown, ImagePlus, Loader2, Sparkles, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -51,6 +51,10 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
   const [assetOptions, setAssetOptions] = useState<string[]>([]);
   const [assetOpen, setAssetOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [scanPreview, setScanPreview] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     getUsdKrwRate().then(({ rate, fallback }) => {
@@ -144,6 +148,67 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
     }
   };
 
+  const fileToDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const handleScreenshot = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("이미지 파일만 업로드할 수 있습니다");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("이미지는 8MB 이하만 가능합니다");
+      return;
+    }
+    setScanning(true);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      setScanPreview(dataUrl);
+      const { data, error } = await supabase.functions.invoke("parse-dividend-screenshot", {
+        body: { imageDataUrl: dataUrl },
+      });
+      if (error) throw error;
+      const r = (data as any)?.result;
+      if (!r) throw new Error("이미지에서 정보를 찾지 못했어요");
+
+      let filledCount = 0;
+      if (r.date) {
+        const d = new Date(r.date);
+        if (!isNaN(d.getTime())) {
+          setDate(d);
+          filledCount++;
+        }
+      }
+      if (r.asset_name) {
+        setAssetName(String(r.asset_name));
+        filledCount++;
+      }
+      if (typeof r.amount === "number" && r.amount > 0) {
+        setAmount(String(r.amount));
+        filledCount++;
+      }
+      if (r.currency === "USD" || r.currency === "KRW") {
+        setCurrency(r.currency);
+        filledCount++;
+      }
+      if (r.category && (CATEGORIES as readonly string[]).includes(r.category)) {
+        setCategory(r.category as Category);
+        filledCount++;
+      }
+      if (filledCount === 0) toast.error("이미지에서 인식된 항목이 없어요. 직접 입력해 주세요.");
+      else toast.success("내역을 자동으로 채웠습니다. 맞는지 확인해 보세요!");
+    } catch (err: any) {
+      toast.error(err?.message ?? "이미지 분석 중 오류가 발생했어요");
+    } finally {
+      setScanning(false);
+    }
+  };
+
   return (
     <Card className="p-6 shadow-elev-sm">
       <div className="flex items-center justify-between mb-5">
@@ -154,6 +219,86 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
           </Button>
         )}
       </div>
+
+      {!editing && (
+        <div
+          className={cn(
+            "mb-5 rounded-xl border-2 border-dashed p-4 transition-smooth",
+            dragActive ? "border-primary bg-accent/40" : "border-border bg-secondary/40",
+            scanning && "opacity-90"
+          )}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragActive(true);
+          }}
+          onDragLeave={() => setDragActive(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragActive(false);
+            const f = e.dataTransfer.files?.[0];
+            if (f) handleScreenshot(f);
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <div className="h-10 w-10 rounded-xl bg-gradient-primary flex items-center justify-center shrink-0 shadow-elev-sm">
+              <Sparkles className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold">스크린샷으로 자동 입력</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                증권사 앱 스크린샷을 올리면 AI가 날짜·종목·금액·통화를 자동으로 채워드려요.
+              </p>
+
+              {scanPreview && (
+                <div className="mt-3 relative inline-block">
+                  <img
+                    src={scanPreview}
+                    alt="업로드한 스크린샷 미리보기"
+                    className="max-h-32 rounded-lg border border-border"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setScanPreview(null)}
+                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background border border-border shadow-elev-sm flex items-center justify-center hover:bg-secondary"
+                    aria-label="미리보기 제거"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleScreenshot(f);
+                    e.target.value = "";
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={scanning}
+                >
+                  {scanning ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <ImagePlus className="h-4 w-4 mr-2" />
+                  )}
+                  {scanning ? "AI가 배당 내역을 읽고 있어요… 🔍" : "스크린샷 업로드"}
+                </Button>
+                <span className="text-xs text-muted-foreground">또는 이 영역에 끌어다 놓기</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
         {/* Date */}
