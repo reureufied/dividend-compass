@@ -125,7 +125,7 @@ const Index = () => {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
           안녕하세요{displayName ? `, ${displayName}님` : ""}!
         </h1>
         <p className="text-muted-foreground mt-1">오늘의 자산과 배당 흐름을 한눈에 확인하세요</p>
