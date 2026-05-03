@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import { AlertTriangle, CalendarIcon, Loader2, Sparkles, Trash2 } from "lucide-react";
+import { AlertTriangle, CalendarIcon, Calculator, Loader2, Sparkles, Trash2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useKnownAssetNames } from "@/hooks/useKnownAssetNames";
 import { findSimilarAsset } from "@/lib/assetMatch";
