@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { CATEGORIES, Category, Currency, Dividend } from "@/lib/dividends";
@@ -40,6 +48,8 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
   const [submitting, setSubmitting] = useState(false);
   const [rate, setRate] = useState<number | null>(null);
   const [rateFallback, setRateFallback] = useState(false);
+  const [assetOptions, setAssetOptions] = useState<string[]>([]);
+  const [assetOpen, setAssetOpen] = useState(false);
 
   useEffect(() => {
     getUsdKrwRate().then(({ rate, fallback }) => {
@@ -47,6 +57,18 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
       setRateFallback(fallback);
     });
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("dividends")
+      .select("asset_name")
+      .then(({ data }) => {
+        const set = new Set<string>();
+        (data ?? []).forEach((r: any) => r.asset_name && set.add(r.asset_name));
+        setAssetOptions(Array.from(set).sort((a, b) => a.localeCompare(b, "ko")));
+      });
+  }, [user]);
 
   useEffect(() => {
     if (editing) {
@@ -159,15 +181,72 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
           </Popover>
         </div>
 
-        {/* Asset name */}
+        {/* Asset name with autocomplete */}
         <div className="space-y-2">
           <Label htmlFor="asset">종목명</Label>
-          <Input
-            id="asset"
-            placeholder="예: SCHD"
-            value={assetName}
-            onChange={(e) => setAssetName(e.target.value)}
-          />
+          <Popover open={assetOpen} onOpenChange={setAssetOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                role="combobox"
+                aria-expanded={assetOpen}
+                className={cn(
+                  "w-full justify-between font-normal",
+                  !assetName && "text-muted-foreground"
+                )}
+              >
+                <span className="truncate">{assetName || "종목 선택 또는 입력"}</span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-popover" align="start">
+              <Command>
+                <CommandInput
+                  placeholder="검색하거나 새 종목 입력"
+                  value={assetName}
+                  onValueChange={setAssetName}
+                />
+                <CommandList>
+                  <CommandEmpty>
+                    {assetName ? (
+                      <button
+                        type="button"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md"
+                        onClick={() => setAssetOpen(false)}
+                      >
+                        새 종목 추가: <span className="font-semibold">{assetName}</span>
+                      </button>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">등록된 종목이 없습니다</span>
+                    )}
+                  </CommandEmpty>
+                  {assetOptions.length > 0 && (
+                    <CommandGroup heading="기존 종목">
+                      {assetOptions.map((opt) => (
+                        <CommandItem
+                          key={opt}
+                          value={opt}
+                          onSelect={(v) => {
+                            setAssetName(v);
+                            setAssetOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              assetName === opt ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {opt}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  )}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Category */}
