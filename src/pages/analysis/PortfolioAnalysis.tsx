@@ -341,7 +341,7 @@ const PortfolioAnalysis = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">포트폴리오 분석</h1>
+        <h2 className="text-2xl font-bold tracking-tight">포트폴리오 분석</h2>
         <p className="text-muted-foreground text-sm mt-1">
           월별 자산 스냅샷을 기록하고, 비중·수익률·시계열 변동을 분석하세요.
         </p>
