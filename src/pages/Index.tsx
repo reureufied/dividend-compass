@@ -195,10 +195,14 @@ const Index = () => {
                     dataKey="value"
                     nameKey="name"
                     innerRadius={55}
-                    outerRadius={85}
+                    outerRadius={88}
                     paddingAngle={2}
                     stroke="hsl(var(--card))"
                     strokeWidth={2}
+                    label={({ percent }) =>
+                      percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : ""
+                    }
+                    labelLine={false}
                   >
                     {byAsset.map((_, i) => (
                       <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
