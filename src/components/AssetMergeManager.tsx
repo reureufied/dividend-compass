@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "sonner";
 import { findSimilarAsset, normalizeAsset, similarity } from "@/lib/assetMatch";
 
-const IGNORE_KEY = "asset_merge_ignore_pairs_v1";
+const IGNORE_KEY = "asset_merge_ignore_pairs_v2";
 const pairKey = (a: string, b: string) => (a < b ? `${a}||${b}` : `${b}||${a}`);
 const loadIgnore = (): Set<string> => {
   try { return new Set(JSON.parse(localStorage.getItem(IGNORE_KEY) ?? "[]")); }
