@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AddDividend from "./pages/AddDividend";
 import CalendarPage from "./pages/CalendarPage";
+import SearchPage from "./pages/SearchPage";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
