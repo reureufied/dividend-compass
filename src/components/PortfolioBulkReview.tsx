@@ -26,6 +26,7 @@ export interface HoldingDraft {
   target_weight: string;
   auto_mapped?: boolean;
   original_name?: string;
+  computed_fields?: string[];
 }
 
 interface Props {
@@ -44,6 +45,7 @@ export const toHoldingDraft = (r: any): HoldingDraft => ({
   avg_purchase_price: r?.avg_purchase_price > 0 ? String(r.avg_purchase_price) : "",
   current_price: r?.current_price > 0 ? String(r.current_price) : "",
   target_weight: "",
+  computed_fields: Array.isArray(r?.computed_fields) ? r.computed_fields : [],
 });
 
 export const PortfolioBulkReview = ({
