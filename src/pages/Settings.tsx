@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Dividend } from "@/lib/dividends";
 import { formatKRW } from "@/lib/fx";
+import { PortfolioEditor } from "@/components/PortfolioEditor";
 
 const goalSchema = z.object({
   monthly_goal: z.number().min(0, "0 이상 입력해주세요").max(1_000_000_000_000),
