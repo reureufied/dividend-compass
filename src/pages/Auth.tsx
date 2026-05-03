@@ -19,9 +19,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-// Internal-only domain used to back ID-based auth on top of Supabase email auth.
-const ID_DOMAIN = "local.compass";
-const usernameToEmail = (u: string) => `${u.trim().toLowerCase()}@${ID_DOMAIN}`;
+// Internal-only domains used to back ID-based auth on top of email auth.
+// Keep the legacy domain so accounts created before the ID-login update can still sign in.
+const ID_DOMAINS = ["local.compass", "id.local"] as const;
+const usernameToEmail = (u: string, domain = ID_DOMAINS[0]) => `${u.trim().toLowerCase()}@${domain}`;
+const usernameToLoginEmails = (u: string) => ID_DOMAINS.map((domain) => usernameToEmail(u, domain));
 
 const usernameSchema = z
   .string()
@@ -134,11 +136,19 @@ const Auth = () => {
         }
         showDialog("가입 완료", "회원가입이 완료되었습니다. 대시보드로 이동합니다.", () => navigate("/"));
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password: p.data,
-        });
-        if (error) throw error;
+        let lastError: any = null;
+        for (const loginEmail of usernameToLoginEmails(u.data)) {
+          const { error } = await supabase.auth.signInWithPassword({
+            email: loginEmail,
+            password: p.data,
+          });
+          if (!error) {
+            lastError = null;
+            break;
+          }
+          lastError = error;
+        }
+        if (lastError) throw lastError;
         navigate("/");
       }
     } catch (err: any) {
