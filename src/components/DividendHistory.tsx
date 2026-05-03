@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,8 @@ import {
 import { toast } from "sonner";
 import { Dividend } from "@/lib/dividends";
 import { formatKRW, formatUSD } from "@/lib/fx";
+import { krwOf } from "@/lib/analytics";
+import { cn } from "@/lib/utils";
 
 interface Props {
   items: Dividend[];
@@ -34,51 +36,105 @@ interface Props {
   onChanged: () => void;
 }
 
+type SortKey = "date" | "asset_name" | "category" | "amount";
+type SortDir = "asc" | "desc";
+
 export const DividendHistory = ({ items, loading, onEdit, onChanged }: Props) => {
   const [pendingDelete, setPendingDelete] = useState<Dividend | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir(key === "date" || key === "amount" ? "desc" : "asc");
+    }
+  };
+
+  const sorted = useMemo(() => {
+    const arr = [...items];
+    arr.sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "date") cmp = a.date.localeCompare(b.date);
+      else if (sortKey === "asset_name") cmp = a.asset_name.localeCompare(b.asset_name, "ko");
+      else if (sortKey === "category") cmp = a.category.localeCompare(b.category, "ko");
+      else if (sortKey === "amount") cmp = krwOf(a) - krwOf(b);
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return arr;
+  }, [items, sortKey, sortDir]);
 
   const handleDelete = async () => {
     if (!pendingDelete) return;
     const { error } = await supabase.from("dividends").delete().eq("id", pendingDelete.id);
-    if (error) {
-      toast.error(error.message);
-    } else {
+    if (error) toast.error(error.message);
+    else {
       toast.success("삭제되었습니다");
       onChanged();
     }
     setPendingDelete(null);
   };
 
+  const SortIcon = ({ k }: { k: SortKey }) => {
+    if (sortKey !== k) return <ArrowUpDown className="h-3 w-3 opacity-40" />;
+    return sortDir === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />;
+  };
+
+  const SortableHead = ({
+    k,
+    children,
+    className,
+  }: {
+    k: SortKey;
+    children: React.ReactNode;
+    className?: string;
+  }) => (
+    <TableHead className={className}>
+      <button
+        type="button"
+        onClick={() => toggleSort(k)}
+        className={cn(
+          "inline-flex items-center gap-1 font-medium hover:text-foreground transition-smooth",
+          sortKey === k ? "text-foreground" : "text-muted-foreground"
+        )}
+      >
+        {children}
+        <SortIcon k={k} />
+      </button>
+    </TableHead>
+  );
+
   return (
     <Card className="shadow-elev-sm overflow-hidden">
       <div className="p-6 pb-3">
         <h2 className="text-lg font-semibold">입력 내역</h2>
-        <p className="text-sm text-muted-foreground mt-1">최신순으로 정렬됩니다</p>
+        <p className="text-sm text-muted-foreground mt-1">헤더를 클릭해 정렬할 수 있습니다</p>
       </div>
 
       {loading ? (
         <div className="p-6 text-sm text-muted-foreground">불러오는 중…</div>
-      ) : items.length === 0 ? (
+      ) : sorted.length === 0 ? (
         <div className="p-10 text-center text-sm text-muted-foreground">
           아직 기록된 배당 내역이 없습니다.
         </div>
       ) : (
         <>
-          {/* Desktop table */}
           <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>날짜</TableHead>
-                  <TableHead>종목</TableHead>
-                  <TableHead>분류</TableHead>
-                  <TableHead className="text-right">금액</TableHead>
+                  <SortableHead k="date">날짜</SortableHead>
+                  <SortableHead k="asset_name">종목</SortableHead>
+                  <SortableHead k="category">분류</SortableHead>
+                  <SortableHead k="amount" className="text-right">금액</SortableHead>
                   <TableHead className="text-right">원화 환산</TableHead>
                   <TableHead className="w-24" />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.map((d) => (
+                {sorted.map((d) => (
                   <TableRow key={d.id}>
                     <TableCell className="font-medium">
                       {format(new Date(d.date), "yyyy.MM.dd")}
@@ -116,9 +172,8 @@ export const DividendHistory = ({ items, loading, onEdit, onChanged }: Props) =>
             </Table>
           </div>
 
-          {/* Mobile cards */}
           <ul className="md:hidden divide-y divide-border">
-            {items.map((d) => (
+            {sorted.map((d) => (
               <li key={d.id} className="p-4 flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
