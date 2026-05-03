@@ -653,16 +653,6 @@ const PortfolioAnalysis = () => {
         </TabsContent>
       </Tabs>
 
-      <PortfolioBulkReview
-        open={reviewOpen}
-        onOpenChange={setReviewOpen}
-        rows={draftRows}
-        setRows={setDraftRows}
-        snapshotDate={snapshotDate}
-        setSnapshotDate={setSnapshotDate}
-        onSaved={loadSnaps}
-      />
-
       <EditHoldingDialog
         open={editHoldingOpen}
         onOpenChange={setEditHoldingOpen}
