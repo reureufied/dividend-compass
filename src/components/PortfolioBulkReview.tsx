@@ -132,7 +132,23 @@ export const PortfolioBulkReview = ({
           </Popover>
         </div>
 
-        <div className="max-h-[55vh] overflow-auto rounded-lg border border-border">
+        {(() => {
+          const computedRows = rows.filter((r) => (r.computed_fields?.length ?? 0) > 0);
+          if (computedRows.length === 0) return null;
+          return (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm flex gap-2 items-start">
+              <Calculator className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium text-foreground">
+                  {computedRows.length}건의 단가가 자동 계산되었어요
+                </p>
+                <p className="text-muted-foreground text-xs mt-0.5">
+                  스크린샷에 단가가 없어 <span className="font-medium">매수금액 ÷ 수량</span> 또는 <span className="font-medium">평가금액 ÷ 수량</span>으로 계산했어요. 계산된 셀은 <Calculator className="inline h-3 w-3 text-primary" /> 아이콘으로 표시됩니다.
+                </p>
+              </div>
+            </div>
+          );
+        })()}
           <Table>
             <TableHeader>
               <TableRow>
