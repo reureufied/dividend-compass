@@ -150,7 +150,32 @@ export const PortfolioBulkReview = ({
               {rows.map((r, i) => (
                 <TableRow key={i}>
                   <TableCell>
-                    <Input value={r.asset_name} onChange={(e) => update(i, { asset_name: e.target.value })} className="h-9" />
+                    <div className="flex items-center gap-1">
+                      <Input value={r.asset_name} onChange={(e) => update(i, { asset_name: e.target.value })} className="h-9" />
+                      {(() => {
+                        const sug = findSimilarAsset(r.asset_name, knownNames);
+                        if (!sug) return null;
+                        return (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() => update(i, { asset_name: sug })}
+                                  className="shrink-0 inline-flex items-center justify-center h-7 w-7 rounded-md hover:bg-accent text-amber-500"
+                                  aria-label="유사 종목으로 교정"
+                                >
+                                  <AlertTriangle className="h-4 w-4" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                기존 종목 <span className="font-semibold">"{sug}"</span>과(와) 일치하나요? (클릭하여 교정)
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      })()}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Input type="number" step="any" value={r.quantity} onChange={(e) => update(i, { quantity: e.target.value })} className="h-9" />
