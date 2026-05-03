@@ -55,6 +55,8 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
   const [scanning, setScanning] = useState(false);
   const [scanPreview, setScanPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [draftRows, setDraftRows] = useState<DraftRow[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
