@@ -14,7 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      dividends: {
+        Row: {
+          amount: number
+          amount_krw: number | null
+          asset_name: string
+          category: string
+          created_at: string
+          currency: string
+          date: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          amount_krw?: number | null
+          asset_name: string
+          category: string
+          created_at?: string
+          currency?: string
+          date: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          amount_krw?: number | null
+          asset_name?: string
+          category?: string
+          created_at?: string
+          currency?: string
+          date?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          monthly_goal: number
+          updated_at: string
+          yearly_goal: number
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+          monthly_goal?: number
+          updated_at?: string
+          yearly_goal?: number
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          monthly_goal?: number
+          updated_at?: string
+          yearly_goal?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
