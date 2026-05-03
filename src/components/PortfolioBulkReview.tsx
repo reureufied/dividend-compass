@@ -156,10 +156,25 @@ export const PortfolioBulkReview = ({
                     <div className="flex items-center gap-1">
                       <AssetCombobox
                         value={r.asset_name}
-                        onChange={(v) => update(i, { asset_name: v })}
+                        onChange={(v) => update(i, { asset_name: v, auto_mapped: false })}
                         options={knownNames}
                         placeholder="종목 선택 또는 입력"
                       />
+                      {r.auto_mapped && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="shrink-0 inline-flex items-center justify-center h-7 w-7 text-primary" aria-label="자동 매치됨">
+                                <Sparkles className="h-4 w-4" />
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              기존 종목과 자동 매치되었습니다
+                              {r.original_name ? ` (원본: "${r.original_name}")` : ""}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                       {(() => {
                         const sug = findSimilarAsset(r.asset_name, knownNames);
                         if (!sug) return null;
