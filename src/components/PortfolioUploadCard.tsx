@@ -19,6 +19,7 @@ interface Props {
 export const PortfolioUploadCard = ({ onSaved }: Props) => {
   const knownNames = useKnownAssetNames();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const inFlightRef = useRef(false);
   const [scanning, setScanning] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [draftRows, setDraftRows] = useState<HoldingDraft[]>([]);
