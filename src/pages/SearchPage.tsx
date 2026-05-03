@@ -67,6 +67,30 @@ const SearchPage = () => {
     });
   }, [items, keyword, category, currency, from, to]);
 
+  const [sortKey, setSortKey] = useState<SortKey>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else {
+      setSortKey(key);
+      setSortDir(key === "date" || key === "amount" ? "desc" : "asc");
+    }
+  };
+
+  const sorted = useMemo(() => {
+    const arr = [...filtered];
+    arr.sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "date") cmp = a.date.localeCompare(b.date);
+      else if (sortKey === "asset_name") cmp = a.asset_name.localeCompare(b.asset_name, "ko");
+      else if (sortKey === "category") cmp = a.category.localeCompare(b.category, "ko");
+      else if (sortKey === "amount") cmp = krwOf(a) - krwOf(b);
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return arr;
+  }, [filtered, sortKey, sortDir]);
+
   const total = useMemo(() => filtered.reduce((s, d) => s + krwOf(d), 0), [filtered]);
 
   const reset = () => {
