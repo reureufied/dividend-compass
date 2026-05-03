@@ -102,8 +102,8 @@ const YieldAnalysis = () => {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight">수익률 분석</h1>
-        <p className="text-muted-foreground mt-1">
+        <h2 className="text-2xl font-bold tracking-tight">수익률 분석</h2>
+        <p className="text-muted-foreground mt-1 text-sm">
           포트폴리오 스냅샷의 가장 최근 투자 원금과 누적 배당금을 결합해 자동으로 계산해요.
         </p>
       </header>
