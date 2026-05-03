@@ -12,6 +12,7 @@ import { krwOf } from "@/lib/analytics";
 import { formatKRW } from "@/lib/fx";
 import { predictionsForMonth } from "@/lib/predictions";
 import { cn } from "@/lib/utils";
+import { useDisplayName } from "@/hooks/useDisplayName";
 
 interface Snapshot {
   asset_name: string;
@@ -23,6 +24,7 @@ interface Snapshot {
 
 const Index = () => {
   const { user } = useAuth();
+  const displayName = useDisplayName();
   const [dividends, setDividends] = useState<Dividend[]>([]);
   const [snaps, setSnaps] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,8 +125,10 @@ const Index = () => {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight">대시보드</h1>
-        <p className="text-muted-foreground mt-1">나의 자산과 배당 흐름을 한눈에 확인하세요</p>
+        <h1 className="text-3xl font-bold tracking-tight">
+          안녕하세요{displayName ? `, ${displayName}님` : ""}!
+        </h1>
+        <p className="text-muted-foreground mt-1">오늘의 자산과 배당 흐름을 한눈에 확인하세요</p>
       </header>
 
       {/* KPI cards */}
