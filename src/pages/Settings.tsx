@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { z } from "zod";
-import { Download, LogOut, Mail, Target, Loader2 } from "lucide-react";
+import { Download, LogOut, Mail, Target, Loader2, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,13 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Dividend } from "@/lib/dividends";
 import { formatKRW } from "@/lib/fx";
+import { useDisplayName } from "@/hooks/useDisplayName";
 
 import { AssetMergeManager } from "@/components/AssetMergeManager";
 
@@ -28,12 +32,16 @@ const csvEscape = (v: unknown) => {
 
 const Settings = () => {
   const { user, signOut } = useAuth();
+  const displayName = useDisplayName();
   const navigate = useNavigate();
   const [monthly, setMonthly] = useState("");
   const [yearly, setYearly] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     document.title = "마이페이지 · Dividend Tracker";
@@ -118,6 +126,26 @@ const Settings = () => {
     navigate("/auth");
   };
 
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm.trim() !== "탈퇴하겠습니다") {
+      toast.error("문구를 정확히 입력해주세요");
+      return;
+    }
+    setDeleting(true);
+    try {
+      const { error } = await supabase.functions.invoke("delete-account");
+      if (error) throw error;
+      await supabase.auth.signOut();
+      toast.success("탈퇴가 완료되었습니다");
+      navigate("/auth", { replace: true });
+    } catch (e: any) {
+      toast.error(e.message ?? "탈퇴 중 오류가 발생했습니다");
+    } finally {
+      setDeleting(false);
+      setDeleteOpen(false);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-2xl">
       <header>
@@ -133,8 +161,10 @@ const Settings = () => {
         </div>
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs text-muted-foreground">로그인된 아이디</p>
-            <p className="font-medium truncate">
+            <p className="text-xs text-muted-foreground">이름</p>
+            <p className="font-medium truncate">{displayName || "-"}</p>
+            <p className="text-xs text-muted-foreground mt-2">아이디</p>
+            <p className="font-medium truncate text-sm">
               {(user?.user_metadata as any)?.username ?? user?.email?.split("@")[0]}
             </p>
           </div>
@@ -226,6 +256,50 @@ const Settings = () => {
           CSV로 내보내기
         </Button>
       </Card>
+
+      {/* Danger zone */}
+      <div className="pt-4 flex justify-center">
+        <button
+          type="button"
+          onClick={() => { setDeleteConfirm(""); setDeleteOpen(true); }}
+          className="text-xs text-muted-foreground hover:text-destructive underline underline-offset-4 transition-colors"
+        >
+          회원 탈퇴
+        </button>
+      </div>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-4 w-4" /> 회원 탈퇴
+            </DialogTitle>
+            <DialogDescription className="pt-2 leading-relaxed">
+              정말로 탈퇴하시겠습니까? 탈퇴 시 모든 자산 기록과 배당 데이터가 영구적으로 삭제되며 복구할 수 없습니다.
+              동의하신다면 아래 빈칸에 <span className="font-semibold text-foreground">탈퇴하겠습니다</span> 라고 입력해 주세요.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={deleteConfirm}
+            onChange={(e) => setDeleteConfirm(e.target.value)}
+            placeholder="탈퇴하겠습니다"
+            disabled={deleting}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleting}>
+              취소
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              disabled={deleting || deleteConfirm.trim() !== "탈퇴하겠습니다"}
+            >
+              {deleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              영구 삭제
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

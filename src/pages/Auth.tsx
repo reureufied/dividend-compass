@@ -34,6 +34,7 @@ const Auth = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
 
   useEffect(() => {
     document.title = "로그인 · Dividend Tracker";
@@ -65,15 +66,21 @@ const Auth = () => {
     setSubmitting(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const name = displayName.trim() || u.data;
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password: p.data,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
-            data: { username: u.data },
+            data: { username: u.data, full_name: name, display_name: name },
           },
         });
         if (error) throw error;
+        // Best-effort: update profiles.display_name (trigger creates the row)
+        const uid = signUpData.user?.id;
+        if (uid) {
+          await supabase.from("profiles").update({ display_name: name }).eq("id", uid);
+        }
         toast.success("가입 완료! 대시보드로 이동합니다.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -134,6 +141,19 @@ const Auth = () => {
                     autoComplete={mode === "signin" ? "current-password" : "new-password"}
                   />
                 </div>
+                {mode === "signup" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="display-name">이름</Label>
+                    <Input
+                      id="display-name"
+                      type="text"
+                      placeholder="예: 홍길동"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      maxLength={50}
+                    />
+                  </div>
+                )}
                 {mode === "signup" && (
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">비밀번호 확인</Label>
