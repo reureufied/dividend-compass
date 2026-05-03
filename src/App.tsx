@@ -14,6 +14,7 @@ import SearchPage from "./pages/SearchPage";
 import Settings from "./pages/Settings";
 import Analysis from "./pages/Analysis";
 import Portfolio from "./pages/Portfolio";
+import AssetManager from "./pages/AssetManager";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
