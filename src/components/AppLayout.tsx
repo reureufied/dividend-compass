@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, PlusCircle, Calendar, Settings, TrendingUp, LogOut } from "lucide-react";
+import { LayoutDashboard, PlusCircle, Calendar, Search, Settings, TrendingUp, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ const navItems = [
   { to: "/", label: "대시보드", icon: LayoutDashboard, end: true },
   { to: "/add", label: "배당 기록", icon: PlusCircle, highlight: true },
   { to: "/calendar", label: "캘린더", icon: Calendar },
+  { to: "/search", label: "상세 검색", icon: Search },
   { to: "/settings", label: "마이페이지", icon: Settings },
 ];
 
