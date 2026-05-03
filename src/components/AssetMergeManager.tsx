@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Combine, Loader2, Pencil, Sparkles } from "lucide-react";
+import { Combine, Loader2, Pencil, Sparkles, Wand2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,15 @@ import {
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { findSimilarAsset, normalizeAsset } from "@/lib/assetMatch";
+import { findSimilarAsset, normalizeAsset, similarity } from "@/lib/assetMatch";
+
+const IGNORE_KEY = "asset_merge_ignore_pairs_v1";
+const pairKey = (a: string, b: string) => (a < b ? `${a}||${b}` : `${b}||${a}`);
+const loadIgnore = (): Set<string> => {
+  try { return new Set(JSON.parse(localStorage.getItem(IGNORE_KEY) ?? "[]")); }
+  catch { return new Set(); }
+};
+const saveIgnore = (s: Set<string>) => localStorage.setItem(IGNORE_KEY, JSON.stringify(Array.from(s)));
 
 interface AssetRow {
   name: string;
