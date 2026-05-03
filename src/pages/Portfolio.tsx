@@ -70,6 +70,9 @@ const Portfolio = () => {
   // View 2: time series
   const [periodMonths, setPeriodMonths] = useState<number>(6);
   const [focusAsset, setFocusAsset] = useState<string>("");
+  // View 3: asset-centric trend
+  const [trendAsset, setTrendAsset] = useState<string>("");
+  const [trendSortAsc, setTrendSortAsc] = useState<boolean>(true);
 
   // Snapshot manager
   const [editHolding, setEditHolding] = useState<Snapshot | null>(null);
