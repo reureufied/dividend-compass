@@ -1,5 +1,5 @@
-// Parse multiple portfolio holding records from a user-uploaded screenshot using Lovable AI Vision.
-// Returns: { results: Array<{ asset_name, quantity, avg_purchase_price, current_price }> }
+// Parse portfolio holdings from a screenshot using Google Gemini 1.5 Flash directly.
+// Returns: { results: Array<{ asset_name, quantity, avg_purchase_price, current_price, computed_fields }> }
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,121 +19,116 @@ Deno.serve(async (req) => {
       ? knownAssetNames.filter((n: any) => typeof n === "string" && n.trim()).slice(0, 500)
       : [];
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      return json({ error: "AI API Key가 설정되지 않았습니다.", code: "NO_API_KEY" }, 500);
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) {
+      return json({ error: "Gemini API Key가 설정되지 않았습니다. 수동 입력을 이용해 주세요.", code: "NO_API_KEY" }, 500);
     }
 
-    const systemPrompt = `당신은 한국 증권사 앱(토스증권, 키움, 미래에셋, 한국투자, 삼성증권, NH, KB, 신한 등) **자산/잔고/보유종목 화면** 캡처에서 보유 주식 정보를 추출하는 OCR 전문가입니다.
+    const m = imageDataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+    if (!m) return json({ error: "이미지 형식을 인식할 수 없습니다.", code: "BAD_IMAGE" }, 400);
+    const mimeType = m[1];
+    const base64 = m[2];
 
-[목표 추출 항목]
-- asset_name: 종목명/티커. 한글이면 한글, 영문이면 대문자
-- quantity: 보유 수량(주). 숫자만
-- avg_purchase_price: 평균 매수"단가" (1주당 가격). 화면에 단가가 없으면 비워두세요.
-- current_price: 현재 "단가" (1주당 가격). 화면에 단가가 없으면 비워두세요.
-- total_purchase_amount: 총 매수금액/매입금액 (총액). 컬럼이 있으면, 없으면 비워두세요.
-- evaluation_amount: 평가금액 (현재 평가 총액). 컬럼이 있으면, 없으면 비워두세요.
+    const systemPrompt = `당신은 한국 증권사 앱 자산/잔고/보유종목 화면 캡처에서 보유 주식 정보를 추출하는 OCR 전문가입니다.
 
-[중요 - 단가 vs 총액 구분]
-- "매수단가/평균단가/평단/매입가" → avg_purchase_price (단가)
-- "매수금액/매입금액/원금" → total_purchase_amount (총액)
-- "현재가/현재단가/시세" → current_price (단가)
-- "평가금액/평가액" → evaluation_amount (총액)
+[추출 항목]
+- asset_name: 종목명/티커 (한글이면 한글, 영문은 대문자)
+- quantity: 보유 수량(주)
+- avg_purchase_price: 평균 매수 단가(1주당). 화면에 단가가 없으면 null
+- current_price: 현재 단가(1주당). 화면에 단가가 없으면 null
+- total_purchase_amount: 총 매수금액(총액). 컬럼 없으면 null
+- evaluation_amount: 평가금액(총액). 컬럼 없으면 null
+
+[단가 vs 총액 구분]
+- "매수단가/평균단가/평단/매입가" → avg_purchase_price
+- "매수금액/매입금액/원금" → total_purchase_amount
+- "현재가/현재단가/시세" → current_price
+- "평가금액/평가액" → evaluation_amount
 
 [규칙]
-- 화면의 모든 보유 종목을 빠짐없이 추출. 예수금/매도완료 제외.
-- 손익·수익률 추출 금지. 추측 금지. 화면에 없는 값은 비워두세요(0이 아님).
-- 반드시 fill_holdings 도구를 호출. 종목 없으면 records: [].
+- 모든 보유 종목을 빠짐없이 추출. 예수금/매도완료 제외.
+- 손익·수익률 추출 금지. 화면에 없는 값은 null (0이 아님).
+- 반드시 JSON만 반환. 코드블록·설명 없이 순수 JSON.
+- 종목 없으면 records: [].
 
-[기존 보유 종목 리스트 — 매우 중요]
+[기존 보유 종목 리스트]
 ${knownList.length > 0
-  ? `다음은 사용자가 이미 보유/기록한 종목명 목록입니다. 이미지에서 종목명을 추출할 때 띄어쓰기·영문/한글 혼용·약어 등 표현이 살짝 다르더라도 의미상 같은 종목이라면 반드시 아래 리스트에 있는 정확한 이름 그대로 출력하세요.\n${knownList.map((n) => `- ${n}`).join("\n")}`
-  : "(등록된 기존 종목 없음 — 화면에서 보이는 이름 그대로 추출)"}`;
+  ? `이미지의 종목명이 표기 차이가 있어도 의미상 같다면 아래 이름 그대로 출력:\n${knownList.map((n) => `- ${n}`).join("\n")}`
+  : "(없음)"}`;
 
-    const tools = [
-      {
-        type: "function",
-        function: {
-          name: "fill_holdings",
-          description: "Return all stock holdings visible in the portfolio screenshot.",
-          parameters: {
-            type: "object",
+    const responseSchema = {
+      type: "OBJECT",
+      properties: {
+        records: {
+          type: "ARRAY",
+          items: {
+            type: "OBJECT",
             properties: {
-              records: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    asset_name: { type: "string" },
-                    quantity: { type: "number" },
-                    avg_purchase_price: { type: ["number", "null"] },
-                    current_price: { type: ["number", "null"] },
-                    total_purchase_amount: { type: ["number", "null"] },
-                    evaluation_amount: { type: ["number", "null"] },
-                  },
-                  additionalProperties: false,
-                },
-              },
-              text_readable: { type: "boolean" },
+              asset_name: { type: "STRING" },
+              quantity: { type: "NUMBER" },
+              avg_purchase_price: { type: "NUMBER", nullable: true },
+              current_price: { type: "NUMBER", nullable: true },
+              total_purchase_amount: { type: "NUMBER", nullable: true },
+              evaluation_amount: { type: "NUMBER", nullable: true },
             },
-            required: ["records", "text_readable"],
-            additionalProperties: false,
+            required: ["asset_name", "quantity"],
           },
         },
+        text_readable: { type: "BOOLEAN" },
       },
-    ];
+      required: ["records", "text_readable"],
+    };
 
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const aiResp = await fetch(url, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: [
-              { type: "text", text: "이 증권사 자산 화면에서 모든 보유 종목 정보를 추출해 fill_holdings 도구를 호출하세요." },
-              { type: "image_url", image_url: { url: imageDataUrl } },
-            ],
-          },
-        ],
-        tools,
-        tool_choice: { type: "function", function: { name: "fill_holdings" } },
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents: [{
+          role: "user",
+          parts: [
+            { text: "이 자산 화면에서 모든 보유 종목 정보를 JSON으로 추출하세요." },
+            { inlineData: { mimeType, data: base64 } },
+          ],
+        }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema,
+          temperature: 0.1,
+        },
       }),
     });
 
     if (!aiResp.ok) {
       const errText = await aiResp.text().catch(() => "");
-      console.error("AI gateway error", aiResp.status, errText);
+      console.error("Gemini error", aiResp.status, errText);
       if (aiResp.status === 401 || aiResp.status === 403)
-        return json({ error: "AI API Key가 설정되지 않았습니다.", code: "NO_API_KEY" }, 500);
+        return json({ error: "Gemini API Key가 유효하지 않습니다. 수동 입력을 이용해 주세요.", code: "NO_API_KEY" }, 500);
       if (aiResp.status === 429)
-        return json({ error: "AI 사용량이 많아요. 잠시 후 다시 시도해 주세요.", code: "RATE_LIMIT" }, 429);
-      if (aiResp.status === 402)
-        return json({ error: "Lovable AI 크레딧이 부족합니다.", code: "NO_CREDITS" }, 402);
-      return json({ error: "AI 분석 서버 오류", code: "AI_ERROR" }, 500);
+        return json({ error: "Gemini 사용량 한도를 초과했어요. 잠시 후 다시 시도하거나 수동 입력을 이용해 주세요.", code: "RATE_LIMIT" }, 429);
+      return json({ error: "AI 분석에 실패했어요. 수동 입력을 이용해 주세요.", code: "AI_ERROR" }, 500);
     }
 
     const data = await aiResp.json();
-    const argsStr = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
-    if (!argsStr) return json({ error: "이미지에서 글자를 읽을 수 없습니다.", code: "OCR_UNREADABLE" }, 422);
+    const textOut = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!textOut) return json({ error: "이미지에서 글자를 읽을 수 없습니다. 수동 입력을 이용해 주세요.", code: "OCR_UNREADABLE" }, 422);
 
     let parsed: any;
-    try { parsed = JSON.parse(argsStr); }
-    catch { return json({ error: "AI 응답을 해석하지 못했어요.", code: "PARSE_ERROR" }, 500); }
+    try { parsed = JSON.parse(textOut); }
+    catch {
+      console.error("Failed to parse Gemini JSON:", textOut.slice(0, 500));
+      return json({ error: "AI 응답을 해석하지 못했어요. 수동 입력을 이용해 주세요.", code: "PARSE_ERROR" }, 500);
+    }
 
     const rawResults = Array.isArray(parsed?.records) ? parsed.records : [];
     const readable = parsed?.text_readable !== false;
     if (!readable && rawResults.length === 0)
-      return json({ error: "이미지에서 글자를 읽을 수 없습니다.", code: "OCR_UNREADABLE" }, 422);
+      return json({ error: "이미지에서 글자를 읽을 수 없습니다. 수동 입력을 이용해 주세요.", code: "OCR_UNREADABLE" }, 422);
     if (rawResults.length === 0)
-      return json({ error: "보유 종목 정보를 찾을 수 없습니다. 다시 촬영해 주세요.", code: "NO_HOLDINGS" }, 422);
+      return json({ error: "보유 종목을 찾을 수 없습니다. 다시 촬영하거나 수동 입력을 이용해 주세요.", code: "NO_HOLDINGS" }, 422);
 
-    // Post-process: derive unit prices from totals when missing (avoid divide-by-zero)
+    // Derive unit prices from totals when missing (avoid divide-by-zero)
     const results = rawResults.map((r: any) => {
       const qty = Number(r?.quantity) || 0;
       let avg = Number(r?.avg_purchase_price) || 0;
@@ -161,7 +156,7 @@ ${knownList.length > 0
     return json({ results });
   } catch (e) {
     console.error("parse-portfolio-screenshot fatal:", e);
-    return json({ error: e instanceof Error ? e.message : "Unknown error", code: "FATAL" }, 500);
+    return json({ error: "분석 중 오류가 발생했어요. 수동 입력을 이용해 주세요.", code: "FATAL" }, 500);
   }
 });
 
