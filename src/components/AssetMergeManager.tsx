@@ -351,6 +351,53 @@ export const AssetMergeManager = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={suggestOpen} onOpenChange={setSuggestOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>유사 종목 병합 추천</DialogTitle>
+            <DialogDescription>
+              이름이 85% 이상 유사한 종목 그룹입니다. 대표 이름은 사용 빈도가 가장 높은 이름을 추천했어요.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-auto space-y-3">
+            {smartGroups.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-6">추천할 그룹이 없습니다 🎉</p>
+            )}
+            {smartGroups.map((g, i) => {
+              const rep = g[0]?.name;
+              return (
+                <div key={i} className="rounded-lg border border-border p-3 space-y-2">
+                  <div className="flex flex-wrap gap-1">
+                    {g.map((row) => (
+                      <Badge key={row.name} variant={row.name === rep ? "default" : "outline"}>
+                        {row.name}
+                        <span className="ml-1 opacity-60">({row.dividends + row.snapshots})</span>
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs text-muted-foreground">
+                      추천 대표 이름: <b className="text-foreground">{rep}</b>
+                    </p>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => ignoreGroup(g)}>
+                        <X className="h-4 w-4 mr-1" /> 다른 종목임
+                      </Button>
+                      <Button size="sm" onClick={() => { setSuggestOpen(false); openMerge(g.map((x) => x.name)); }}>
+                        <Sparkles className="h-4 w-4 mr-1" /> 하나로 합치기
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSuggestOpen(false)}>닫기</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
