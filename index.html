@@ -17,6 +17,25 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@Lovable" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <script type="text/javascript">
+      // GitHub Pages SPA: restore path forwarded by 404.html
+      (function () {
+        if (window.location.search.indexOf("?/") === 0 || window.location.search.indexOf("&/") !== -1) {
+          var q = window.location.search.slice(1).split("&").map(function (s) {
+            return s.replace(/~and~/g, "&");
+          });
+          var route = q[0].slice(1);
+          var rest = q.slice(1).join("&");
+          window.history.replaceState(
+            null,
+            null,
+            window.location.pathname.replace(/\/$/, "") + "/" + route +
+              (rest ? "?" + rest : "") +
+              window.location.hash
+          );
+        }
+      })();
+    </script>
   </head>
 
   <body>
