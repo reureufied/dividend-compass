@@ -32,8 +32,8 @@ export const AssetMergeManager = () => {
   const load = async () => {
     setLoading(true);
     const [a, b] = await Promise.all([
-      supabase.from("dividends").select("asset_name"),
-      supabase.from("portfolio_snapshots").select("asset_name"),
+      supabase.from("dividends").select("asset_name").limit(10000),
+      supabase.from("portfolio_snapshots").select("asset_name").limit(10000),
     ]);
     const counts = new Map<string, AssetRow>();
     (a.data ?? []).forEach((r: any) => {
