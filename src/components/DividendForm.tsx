@@ -43,9 +43,9 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
   const { user } = useAuth();
   const [date, setDate] = useState<Date>(new Date());
   const [assetName, setAssetName] = useState("");
-  const [category, setCategory] = useState<Category>("미국 ETF");
+  const [category, setCategory] = useState<Category>("한국 ETF");
   const [amount, setAmount] = useState<string>("");
-  const [currency, setCurrency] = useState<Currency>("USD");
+  const [currency, setCurrency] = useState<Currency>("KRW");
   const [submitting, setSubmitting] = useState(false);
   const [rate, setRate] = useState<number | null>(null);
   const [rateFallback, setRateFallback] = useState(false);
