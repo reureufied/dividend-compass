@@ -36,7 +36,7 @@ const AddDividend = () => {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight">배당금 입력</h1>
+        <h1 className="text-3xl font-bold tracking-tight">기록 추가</h1>
         <p className="text-muted-foreground mt-1">받은 배당을 기록하고 관리하세요</p>
       </header>
 

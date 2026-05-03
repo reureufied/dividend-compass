@@ -53,7 +53,7 @@ const COLORS = [
   "hsl(160 60% 45%)",
 ];
 
-const Portfolio = () => {
+const PortfolioAnalysis = () => {
   const { user } = useAuth();
   const [snaps, setSnaps] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,7 +87,7 @@ const Portfolio = () => {
   const [dateOpsLoading, setDateOpsLoading] = useState(false);
 
   useEffect(() => {
-    document.title = "포트폴리오 분석 · Dividend Tracker";
+    // title controlled by parent Analysis page
   }, []);
 
   const loadSnaps = async () => {
@@ -341,7 +341,7 @@ const Portfolio = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">포트폴리오 분석</h1>
+        <h2 className="text-2xl font-bold tracking-tight">포트폴리오 분석</h2>
         <p className="text-muted-foreground text-sm mt-1">
           월별 자산 스냅샷을 기록하고, 비중·수익률·시계열 변동을 분석하세요.
         </p>
@@ -924,4 +924,4 @@ const Portfolio = () => {
   );
 };
 
-export default Portfolio;
+export default PortfolioAnalysis;
