@@ -39,6 +39,8 @@ export const AssetMergeManager = () => {
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameSource, setRenameSource] = useState("");
   const [renameTo, setRenameTo] = useState("");
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [ignorePairs, setIgnorePairs] = useState<Set<string>>(() => loadIgnore());
 
   const load = async () => {
     setLoading(true);
