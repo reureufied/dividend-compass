@@ -248,4 +248,4 @@ const YieldAnalysis = () => {
   );
 };
 
-export default Analysis;
+export default YieldAnalysis;
