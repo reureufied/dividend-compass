@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, PlusCircle, Calendar, Search, Settings, TrendingUp, LogOut, BarChart3 } from "lucide-react";
+import { LayoutDashboard, PlusCircle, Calendar, Search, Settings, TrendingUp, LogOut, BarChart3, PieChart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
