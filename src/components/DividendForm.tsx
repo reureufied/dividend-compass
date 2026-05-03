@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { CATEGORIES, Category, Currency, Dividend } from "@/lib/dividends";
 import { getUsdKrwRate, formatKRW } from "@/lib/fx";
+import { BulkReviewDialog, DraftRow, toDraftRow } from "@/components/BulkReviewDialog";
 
 const schema = z.object({
   date: z.date(),
