@@ -31,15 +31,11 @@ interface Row {
   sold: boolean; // true when no snapshot found
 }
 
-const Analysis = () => {
+const YieldAnalysis = () => {
   const { user } = useAuth();
   const [dividends, setDividends] = useState<Dividend[]>([]);
   const [snaps, setSnaps] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    document.title = "수익률 분석 · Dividend Tracker";
-  }, []);
 
   useEffect(() => {
     if (!user) return;
