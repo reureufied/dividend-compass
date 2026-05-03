@@ -27,6 +27,40 @@ const passwordSchema = z
   .min(6, "비밀번호는 6자 이상이어야 합니다")
   .max(72, "비밀번호는 72자 이하여야 합니다");
 
+const translateAuthError = (err: any, mode: "signin" | "signup"): string => {
+  const code = String(err?.code ?? "").toLowerCase();
+  const msg = String(err?.message ?? "").toLowerCase();
+  const status = err?.status;
+
+  // Sign up
+  if (mode === "signup") {
+    if (code === "user_already_exists" || msg.includes("already registered") || msg.includes("already been registered") || msg.includes("user already")) {
+      return "이미 가입된 아이디입니다. 로그인해 주세요.";
+    }
+    if (code === "weak_password" || msg.includes("password should be at least") || msg.includes("password is too short")) {
+      return "비밀번호는 최소 6자 이상이어야 합니다.";
+    }
+    if (msg.includes("rate limit") || status === 429) {
+      return "요청이 너무 많아요. 잠시 후 다시 시도해 주세요.";
+    }
+  }
+
+  // Sign in
+  if (mode === "signin") {
+    if (code === "invalid_credentials" || msg.includes("invalid login credentials") || msg.includes("invalid_grant")) {
+      return "아이디 또는 비밀번호가 일치하지 않습니다.";
+    }
+    if (code === "user_not_found" || msg.includes("user not found")) {
+      return "가입되지 않은 아이디입니다.";
+    }
+    if (code === "email_not_confirmed" || msg.includes("email not confirmed")) {
+      return "이메일 인증이 완료되지 않았습니다.";
+    }
+  }
+
+  return err?.message ?? "오류가 발생했습니다";
+};
+
 const Auth = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -92,7 +126,7 @@ const Auth = () => {
       }
       navigate("/");
     } catch (err: any) {
-      toast.error(err.message ?? "오류가 발생했습니다");
+      toast.error(translateAuthError(err, mode));
     } finally {
       setSubmitting(false);
     }
