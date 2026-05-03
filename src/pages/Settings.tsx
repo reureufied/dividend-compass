@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { z } from "zod";
-import { Download, LogOut, Mail, Target, Loader2 } from "lucide-react";
+import { Download, LogOut, Mail, Target, Loader2, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,13 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Dividend } from "@/lib/dividends";
 import { formatKRW } from "@/lib/fx";
+import { useDisplayName } from "@/hooks/useDisplayName";
 
 import { AssetMergeManager } from "@/components/AssetMergeManager";
 
@@ -28,12 +32,16 @@ const csvEscape = (v: unknown) => {
 
 const Settings = () => {
   const { user, signOut } = useAuth();
+  const displayName = useDisplayName();
   const navigate = useNavigate();
   const [monthly, setMonthly] = useState("");
   const [yearly, setYearly] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     document.title = "마이페이지 · Dividend Tracker";
@@ -116,6 +124,26 @@ const Settings = () => {
   const handleSignOut = async () => {
     await signOut();
     navigate("/auth");
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm.trim() !== "탈퇴하겠습니다") {
+      toast.error("문구를 정확히 입력해주세요");
+      return;
+    }
+    setDeleting(true);
+    try {
+      const { error } = await supabase.functions.invoke("delete-account");
+      if (error) throw error;
+      await supabase.auth.signOut();
+      toast.success("탈퇴가 완료되었습니다");
+      navigate("/auth", { replace: true });
+    } catch (e: any) {
+      toast.error(e.message ?? "탈퇴 중 오류가 발생했습니다");
+    } finally {
+      setDeleting(false);
+      setDeleteOpen(false);
+    }
   };
 
   return (
