@@ -71,6 +71,15 @@ const Portfolio = () => {
   const [periodMonths, setPeriodMonths] = useState<number>(6);
   const [focusAsset, setFocusAsset] = useState<string>("");
 
+  // Snapshot manager
+  const [editHolding, setEditHolding] = useState<Snapshot | null>(null);
+  const [editHoldingOpen, setEditHoldingOpen] = useState(false);
+  const [deleteRowId, setDeleteRowId] = useState<string | null>(null);
+  const [deleteDateTarget, setDeleteDateTarget] = useState<string | null>(null);
+  const [editDateTarget, setEditDateTarget] = useState<string | null>(null);
+  const [editDateNew, setEditDateNew] = useState<Date>(new Date());
+  const [dateOpsLoading, setDateOpsLoading] = useState(false);
+
   useEffect(() => {
     document.title = "포트폴리오 분석 · Dividend Tracker";
   }, []);
