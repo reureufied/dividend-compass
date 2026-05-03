@@ -27,6 +27,8 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { formatKRW } from "@/lib/fx";
 import { HoldingDraft, PortfolioBulkReview, toHoldingDraft } from "@/components/PortfolioBulkReview";
+import { useKnownAssetNames } from "@/hooks/useKnownAssetNames";
+import { normalizeAsset, similarity } from "@/lib/assetMatch";
 
 interface Snapshot {
   id: string;
@@ -55,6 +57,7 @@ const Portfolio = () => {
   const { user } = useAuth();
   const [snaps, setSnaps] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
+  const knownNames = useKnownAssetNames();
 
   // Upload / OCR
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -224,7 +227,7 @@ const Portfolio = () => {
       const dataUrl = await fileToDataUrl(file);
       setScanPreview(dataUrl);
       const { data, error } = await supabase.functions.invoke("parse-portfolio-screenshot", {
-        body: { imageDataUrl: dataUrl },
+        body: { imageDataUrl: dataUrl, knownAssetNames: knownNames },
       });
       let payload: any = data;
       if (error) {
@@ -236,9 +239,25 @@ const Portfolio = () => {
       }
       const results = payload?.results;
       if (Array.isArray(results) && results.length > 0) {
-        setDraftRows(results.map(toHoldingDraft));
+        const drafts: HoldingDraft[] = results.map(toHoldingDraft).map((d) => {
+          const raw = d.asset_name?.trim();
+          if (!raw) return d;
+          const nraw = normalizeAsset(raw);
+          const exact = knownNames.find((k) => normalizeAsset(k) === nraw);
+          if (exact && exact !== raw) return { ...d, asset_name: exact, auto_mapped: true, original_name: raw };
+          let best: { name: string; score: number } | null = null;
+          for (const k of knownNames) {
+            const s = similarity(raw, k);
+            if (!best || s > best.score) best = { name: k, score: s };
+          }
+          if (best && best.score >= 0.8 && best.name !== raw) {
+            return { ...d, asset_name: best.name, auto_mapped: true, original_name: raw };
+          }
+          return d;
+        });
+        setDraftRows(drafts);
         setReviewOpen(true);
-        toast.success(`${results.length}건의 보유 종목을 찾았어요. 검토 후 저장해 주세요!`);
+        toast.success(`${drafts.length}건의 보유 종목을 찾았어요. 검토 후 저장해 주세요!`);
         return;
       }
       const code = payload?.code;
