@@ -57,6 +57,7 @@ const Portfolio = () => {
   const { user } = useAuth();
   const [snaps, setSnaps] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
+  const knownNames = useKnownAssetNames();
 
   // Upload / OCR
   const fileInputRef = useRef<HTMLInputElement | null>(null);
