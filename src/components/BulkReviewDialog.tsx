@@ -265,6 +265,39 @@ export const BulkReviewDialog = ({ open, onOpenChange, rows, setRows, fxRate, on
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={dupOpen} onOpenChange={setDupOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>중복된 기록이 발견되었어요</AlertDialogTitle>
+          <AlertDialogDescription>
+            이미 저장된 동일한 배당 기록이 {dupCount}건 발견되었습니다. 중복된 기록을 제외하고 새로운 기록만 저장하시겠습니까?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={saving}>취소</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={saving}
+            onClick={async (e) => {
+              e.preventDefault();
+              setSaving(true);
+              try {
+                await insertRows(pendingPayload);
+                setDupOpen(false);
+              } catch (err: any) {
+                toast.error(err?.message ?? "저장 중 오류가 발생했어요");
+              } finally {
+                setSaving(false);
+              }
+            }}
+          >
+            {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            중복 제외하고 저장 ({pendingPayload.length}건)
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 };
 
