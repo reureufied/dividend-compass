@@ -13,6 +13,7 @@ import CalendarPage from "./pages/CalendarPage";
 import SearchPage from "./pages/SearchPage";
 import Settings from "./pages/Settings";
 import Analysis from "./pages/Analysis";
+import Portfolio from "./pages/Portfolio";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/analysis" element={<Analysis />} />
+              <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
             <Route path="*" element={<NotFound />} />

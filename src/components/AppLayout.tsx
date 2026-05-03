@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, PlusCircle, Calendar, Search, Settings, TrendingUp, LogOut, BarChart3 } from "lucide-react";
+import { LayoutDashboard, PlusCircle, Calendar, Search, Settings, TrendingUp, LogOut, BarChart3, PieChart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ const navItems = [
   { to: "/add", label: "배당 기록", icon: PlusCircle, highlight: true },
   { to: "/calendar", label: "캘린더", icon: Calendar },
   { to: "/analysis", label: "수익률 분석", icon: BarChart3 },
+  { to: "/portfolio", label: "포트폴리오", icon: PieChart },
   { to: "/search", label: "상세 검색", icon: Search },
   { to: "/settings", label: "마이페이지", icon: Settings },
 ];
@@ -77,7 +78,7 @@ export const AppLayout = () => {
 
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur-lg border-t border-border">
-        <div className="grid grid-cols-6">
+        <div className="grid grid-cols-7">
           {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
