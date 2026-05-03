@@ -19,6 +19,7 @@ interface Props {
 export const PortfolioUploadCard = ({ onSaved }: Props) => {
   const knownNames = useKnownAssetNames();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const inFlightRef = useRef(false);
   const [scanning, setScanning] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [draftRows, setDraftRows] = useState<HoldingDraft[]>([]);
@@ -35,8 +36,10 @@ export const PortfolioUploadCard = ({ onSaved }: Props) => {
     });
 
   const handleScreenshot = async (file: File) => {
+    if (inFlightRef.current) return;
     if (!file.type.startsWith("image/")) return toast.error("이미지 파일만 업로드할 수 있어요");
     if (file.size > 8 * 1024 * 1024) return toast.error("이미지는 8MB 이하만 가능해요");
+    inFlightRef.current = true;
     setScanning(true);
     try {
       const dataUrl = await fileToDataUrl(file);
@@ -84,6 +87,7 @@ export const PortfolioUploadCard = ({ onSaved }: Props) => {
       toast.error(err?.message ?? "이미지 분석 중 오류가 발생했어요");
     } finally {
       setScanning(false);
+      inFlightRef.current = false;
     }
   };
 

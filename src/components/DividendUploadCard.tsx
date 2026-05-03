@@ -19,6 +19,7 @@ interface Props {
 export const DividendUploadCard = ({ fxRate, onSaved, onToggleManual, manualOpen }: Props) => {
   const knownNames = useKnownAssetNames();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const inFlightRef = useRef(false);
   const [scanning, setScanning] = useState(false);
   const [scanPreview, setScanPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -34,8 +35,10 @@ export const DividendUploadCard = ({ fxRate, onSaved, onToggleManual, manualOpen
     });
 
   const handleScreenshot = async (file: File) => {
+    if (inFlightRef.current) return;
     if (!file.type.startsWith("image/")) return toast.error("이미지 파일만 업로드할 수 있습니다");
     if (file.size > 8 * 1024 * 1024) return toast.error("이미지는 8MB 이하만 가능합니다");
+    inFlightRef.current = true;
     setScanning(true);
     try {
       const dataUrl = await fileToDataUrl(file);
@@ -85,6 +88,7 @@ export const DividendUploadCard = ({ fxRate, onSaved, onToggleManual, manualOpen
       toast.error(err?.message ?? "이미지 분석 중 오류가 발생했어요");
     } finally {
       setScanning(false);
+      inFlightRef.current = false;
     }
   };
 
