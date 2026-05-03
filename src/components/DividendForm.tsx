@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { CalendarIcon, Check, ChevronsUpDown, ImagePlus, Loader2, Sparkles, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
