@@ -70,6 +70,9 @@ const Portfolio = () => {
   // View 2: time series
   const [periodMonths, setPeriodMonths] = useState<number>(6);
   const [focusAsset, setFocusAsset] = useState<string>("");
+  // View 3: asset-centric trend
+  const [trendAsset, setTrendAsset] = useState<string>("");
+  const [trendSortAsc, setTrendSortAsc] = useState<boolean>(true);
 
   // Snapshot manager
   const [editHolding, setEditHolding] = useState<Snapshot | null>(null);
@@ -175,6 +178,34 @@ const Portfolio = () => {
     });
     return diffs;
   }, [snaps, focusAsset, periodMonths]);
+
+  // ====== View 3: asset-centric trend (all-time) ======
+  const trendRows = useMemo(() => {
+    if (!trendAsset) return [];
+    const rows = snaps
+      .filter((s) => s.asset_name === trendAsset)
+      .map((s) => {
+        const principal = s.quantity * s.avg_purchase_price;
+        const value = s.quantity * s.current_price;
+        return {
+          date: s.snapshot_date,
+          quantity: s.quantity,
+          avg_purchase_price: s.avg_purchase_price,
+          current_price: s.current_price,
+          principal,
+          value,
+          pnl: value - principal,
+        };
+      })
+      .sort((a, b) => (a.date < b.date ? -1 : 1));
+    return rows;
+  }, [snaps, trendAsset]);
+
+  const trendTableRows = useMemo(() => {
+    const arr = [...trendRows];
+    arr.sort((a, b) => (trendSortAsc ? (a.date < b.date ? -1 : 1) : a.date < b.date ? 1 : -1));
+    return arr;
+  }, [trendRows, trendSortAsc]);
 
   // ====== OCR Upload ======
   const fileToDataUrl = (file: File) =>
@@ -386,6 +417,7 @@ const Portfolio = () => {
         <TabsList>
           <TabsTrigger value="point">특정 시점 분석</TabsTrigger>
           <TabsTrigger value="series">시계열 변동 분석</TabsTrigger>
+          <TabsTrigger value="trend">종목별 추이 보기</TabsTrigger>
           <TabsTrigger value="manage">스냅샷 관리</TabsTrigger>
         </TabsList>
 
@@ -639,6 +671,102 @@ const Portfolio = () => {
               </>
             )}
           </Card>
+        </TabsContent>
+
+        {/* ===== View 3: Asset-centric Trend ===== */}
+        <TabsContent value="trend" className="space-y-4">
+          <Card className="p-5">
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <span className="text-sm font-medium">종목 선택</span>
+              <Select value={trendAsset} onValueChange={setTrendAsset}>
+                <SelectTrigger className="w-[260px]">
+                  <SelectValue placeholder="종목을 선택하세요" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allAssets.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {!trendAsset ? (
+              <p className="text-sm text-muted-foreground">종목을 선택하면 전체 기간의 수량·평가금액·투자원금 추이를 보여드려요.</p>
+            ) : trendRows.length === 0 ? (
+              <p className="text-sm text-muted-foreground">해당 종목의 스냅샷이 없어요.</p>
+            ) : (
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div>
+                  <h3 className="font-semibold mb-2">수량 변동 추이</h3>
+                  <div className="h-[280px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={trendRows}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} />
+                        <Tooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="quantity" name="수량(주)" stroke="hsl(var(--primary))" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">평가금액 vs 투자원금 추이</h3>
+                  <div className="h-[280px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={trendRows}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 10000).toFixed(0)}만`} />
+                        <Tooltip formatter={(v: number) => formatKRW(Math.round(v))} />
+                        <Legend />
+                        <Line type="monotone" dataKey="principal" name="투자원금" stroke="hsl(var(--muted-foreground))" strokeWidth={2} />
+                        <Line type="monotone" dataKey="value" name="평가금액" stroke="hsl(var(--primary))" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {trendAsset && trendRows.length > 0 && (
+            <Card className="p-0 overflow-hidden">
+              <div className="flex items-center justify-between p-4">
+                <h3 className="font-semibold">{trendAsset} · 스냅샷 히스토리</h3>
+                <Button variant="outline" size="sm" onClick={() => setTrendSortAsc((v) => !v)}>
+                  날짜 {trendSortAsc ? "오름차순 ↑" : "내림차순 ↓"}
+                </Button>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>날짜</TableHead>
+                    <TableHead className="text-right">수량</TableHead>
+                    <TableHead className="text-right">매수단가</TableHead>
+                    <TableHead className="text-right">현재단가</TableHead>
+                    <TableHead className="text-right">투자원금</TableHead>
+                    <TableHead className="text-right">평가금액</TableHead>
+                    <TableHead className="text-right">손익금</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {trendTableRows.map((r) => (
+                    <TableRow key={r.date}>
+                      <TableCell className="font-medium">{r.date}</TableCell>
+                      <TableCell className="text-right">{r.quantity.toLocaleString()}</TableCell>
+                      <TableCell className="text-right">{r.avg_purchase_price.toLocaleString()}</TableCell>
+                      <TableCell className="text-right">{r.current_price.toLocaleString()}</TableCell>
+                      <TableCell className="text-right">{formatKRW(Math.round(r.principal))}</TableCell>
+                      <TableCell className="text-right">{formatKRW(Math.round(r.value))}</TableCell>
+                      <TableCell className={cn("text-right font-medium", r.pnl >= 0 ? "text-emerald-500" : "text-destructive")}>
+                        {r.pnl >= 0 ? "+" : ""}{formatKRW(Math.round(r.pnl))}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          )}
         </TabsContent>
 
         {/* ===== Snapshot Manager ===== */}
