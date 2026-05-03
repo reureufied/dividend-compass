@@ -1,5 +1,5 @@
-// Parse a dividend record from a user-uploaded screenshot using Lovable AI Vision.
-// Returns: { date?: 'YYYY-MM-DD', asset_name?: string, amount?: number, currency?: 'USD'|'KRW', category?: string }
+// Parse multiple dividend records from a user-uploaded screenshot using Lovable AI Vision.
+// Returns: { results: Array<{ date?, asset_name?, amount?, currency?, category? }> }
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,31 +21,48 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) return json({ error: "LOVABLE_API_KEY is not configured" }, 500);
 
-    const systemPrompt = `당신은 한국어/영어 증권/뱅킹 앱의 배당금 입력 화면 스크린샷을 분석하는 OCR 전문가입니다.
-이미지에서 단일 배당 거래에 해당하는 값을 추출해 주어진 도구를 호출하세요.
-- date: YYYY-MM-DD (예: 2025-03-15). 연도가 없으면 올해로 가정.
-- asset_name: 종목명 또는 티커 (예: SCHD, 삼성전자).
-- amount: 숫자만, 통화기호/콤마 제외.
-- currency: 원화면 KRW, 달러면 USD.
-- category: ${CATEGORIES.join(", ")} 중 하나로 추정. 미국 종목/ETF/한국 종목 여부를 보고 결정. 모르면 "기타".
-값을 못 찾으면 해당 필드를 생략하세요. 추측은 금지.`;
+    const systemPrompt = `당신은 한국어/영어 증권/뱅킹 앱의 배당금/분배금 입금 내역 스크린샷을 분석하는 OCR 전문가입니다.
+이미지에 있는 **모든** 배당금/분배금 입금 거래 내역을 끝까지 빠짐없이 스캔하여 배열로 추출하세요.
+
+각 항목 필드:
+- date: YYYY-MM-DD (연도가 없으면 올해로 가정)
+- asset_name: 종목명 또는 티커 (예: SCHD, 삼성전자)
+- amount: 숫자만, 통화기호/콤마 제외
+- currency: 원화면 KRW, 달러면 USD
+- category: ${CATEGORIES.join(", ")} 중 하나로 추정. 모르면 "기타".
+
+규칙:
+- 배당/분배금이 아닌 일반 입출금/매매 내역은 제외
+- 같은 종목이라도 날짜·금액이 다르면 별개의 행으로 분리
+- 값을 못 찾는 필드는 생략. 추측 금지.
+- 내역이 하나도 없으면 빈 배열 []을 반환.
+반드시 fill_dividends 도구를 호출하여 결과를 반환하세요.`;
 
     const tools = [
       {
         type: "function",
         function: {
-          name: "fill_dividend",
-          description: "Return extracted dividend record fields.",
+          name: "fill_dividends",
+          description: "Return all extracted dividend records found in the image.",
           parameters: {
             type: "object",
             properties: {
-              date: { type: "string", description: "YYYY-MM-DD" },
-              asset_name: { type: "string" },
-              amount: { type: "number" },
-              currency: { type: "string", enum: ["USD", "KRW"] },
-              category: { type: "string", enum: CATEGORIES },
-              confidence: { type: "number", description: "0~1 사이 확신도" },
+              records: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    date: { type: "string", description: "YYYY-MM-DD" },
+                    asset_name: { type: "string" },
+                    amount: { type: "number" },
+                    currency: { type: "string", enum: ["USD", "KRW"] },
+                    category: { type: "string", enum: CATEGORIES },
+                  },
+                  additionalProperties: false,
+                },
+              },
             },
+            required: ["records"],
             additionalProperties: false,
           },
         },
@@ -65,13 +82,13 @@ Deno.serve(async (req) => {
           {
             role: "user",
             content: [
-              { type: "text", text: "이 스크린샷에서 배당 정보를 추출해 fill_dividend 도구를 호출하세요." },
+              { type: "text", text: "이 스크린샷의 모든 배당/분배금 내역을 추출해 fill_dividends 도구를 호출하세요." },
               { type: "image_url", image_url: { url: imageDataUrl } },
             ],
           },
         ],
         tools,
-        tool_choice: { type: "function", function: { name: "fill_dividend" } },
+        tool_choice: { type: "function", function: { name: "fill_dividends" } },
       }),
     });
 
@@ -86,7 +103,7 @@ Deno.serve(async (req) => {
     const data = await aiResp.json();
     const call = data?.choices?.[0]?.message?.tool_calls?.[0];
     const argsStr = call?.function?.arguments;
-    if (!argsStr) return json({ error: "이미지에서 배당 정보를 찾지 못했어요." }, 422);
+    if (!argsStr) return json({ results: [] });
 
     let parsed: any;
     try {
@@ -95,7 +112,8 @@ Deno.serve(async (req) => {
       return json({ error: "AI 응답을 해석하지 못했어요." }, 500);
     }
 
-    return json({ result: parsed });
+    const results = Array.isArray(parsed?.records) ? parsed.records : [];
+    return json({ results });
   } catch (e) {
     console.error("parse-dividend-screenshot error:", e);
     return json({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
