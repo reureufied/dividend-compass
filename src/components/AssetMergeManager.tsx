@@ -121,6 +121,37 @@ export const AssetMergeManager = () => {
     }
   };
 
+  const openRename = (name: string) => {
+    setRenameSource(name);
+    setRenameTo(name);
+    setRenameOpen(true);
+  };
+
+  const renameAsset = async () => {
+    const finalName = renameTo.trim();
+    if (!finalName) return toast.error("새 이름을 입력해주세요");
+    if (finalName === renameSource) {
+      setRenameOpen(false);
+      return;
+    }
+    setMerging(true);
+    try {
+      const [d, s] = await Promise.all([
+        supabase.from("dividends").update({ asset_name: finalName }).eq("asset_name", renameSource),
+        supabase.from("portfolio_snapshots").update({ asset_name: finalName }).eq("asset_name", renameSource),
+      ]);
+      if (d.error) throw d.error;
+      if (s.error) throw s.error;
+      toast.success(`"${renameSource}" → "${finalName}" 으로 변경되었습니다`);
+      setRenameOpen(false);
+      load();
+    } catch (err: any) {
+      toast.error(err?.message ?? "이름 변경 중 오류가 발생했어요");
+    } finally {
+      setMerging(false);
+    }
+  };
+
   return (
     <Card className="p-6 shadow-elev-sm">
       <div className="flex items-center justify-between gap-2 mb-2">
