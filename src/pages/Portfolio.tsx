@@ -345,7 +345,7 @@ const Portfolio = () => {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold">증권사 자산 화면 스크린샷으로 자동 입력</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                보유 종목·수량·매수단가·현재단가를 AI가 추출해 드려요. 목표 비중은 직접 입력해 주세요.
+                클릭하여 파일을 선택하거나, 캡처 후 여기에 붙여넣기(Ctrl+V / Cmd+V) 하세요. 보유 종목·수량·매수단가·현재단가를 AI가 추출해 드려요. 목표 비중은 직접 입력해 주세요.
               </p>
               {scanPreview && (
                 <div className="mt-3 relative inline-block">
