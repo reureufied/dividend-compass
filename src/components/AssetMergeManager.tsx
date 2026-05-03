@@ -28,6 +28,9 @@ export const AssetMergeManager = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [target, setTarget] = useState("");
   const [merging, setMerging] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameSource, setRenameSource] = useState("");
+  const [renameTo, setRenameTo] = useState("");
 
   const load = async () => {
     setLoading(true);
