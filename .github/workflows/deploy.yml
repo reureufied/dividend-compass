@@ -33,8 +33,6 @@ jobs:
           VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
         run: bun run build
 
-      - name: SPA fallback (copy index.html to 404.html)
-        run: cp dist/index.html dist/404.html
 
       - uses: actions/upload-pages-artifact@v3
         with:
