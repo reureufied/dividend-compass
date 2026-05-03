@@ -148,6 +148,67 @@ export const DividendForm = ({ editing, onSaved, onCancelEdit }: Props) => {
     }
   };
 
+  const fileToDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const handleScreenshot = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("이미지 파일만 업로드할 수 있습니다");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("이미지는 8MB 이하만 가능합니다");
+      return;
+    }
+    setScanning(true);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      setScanPreview(dataUrl);
+      const { data, error } = await supabase.functions.invoke("parse-dividend-screenshot", {
+        body: { imageDataUrl: dataUrl },
+      });
+      if (error) throw error;
+      const r = (data as any)?.result;
+      if (!r) throw new Error("이미지에서 정보를 찾지 못했어요");
+
+      let filledCount = 0;
+      if (r.date) {
+        const d = new Date(r.date);
+        if (!isNaN(d.getTime())) {
+          setDate(d);
+          filledCount++;
+        }
+      }
+      if (r.asset_name) {
+        setAssetName(String(r.asset_name));
+        filledCount++;
+      }
+      if (typeof r.amount === "number" && r.amount > 0) {
+        setAmount(String(r.amount));
+        filledCount++;
+      }
+      if (r.currency === "USD" || r.currency === "KRW") {
+        setCurrency(r.currency);
+        filledCount++;
+      }
+      if (r.category && (CATEGORIES as readonly string[]).includes(r.category)) {
+        setCategory(r.category as Category);
+        filledCount++;
+      }
+      if (filledCount === 0) toast.error("이미지에서 인식된 항목이 없어요. 직접 입력해 주세요.");
+      else toast.success("내역을 자동으로 채웠습니다. 맞는지 확인해 보세요!");
+    } catch (err: any) {
+      toast.error(err?.message ?? "이미지 분석 중 오류가 발생했어요");
+    } finally {
+      setScanning(false);
+    }
+  };
+
   return (
     <Card className="p-6 shadow-elev-sm">
       <div className="flex items-center justify-between mb-5">
