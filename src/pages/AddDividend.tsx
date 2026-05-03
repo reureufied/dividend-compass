@@ -106,7 +106,7 @@ const AddDividend = () => {
         </TabsContent>
 
         <TabsContent value="portfolio" className="space-y-6">
-          <PortfolioUploadCard onSaved={() => toast.success("스냅샷이 저장되었어요")} />
+          <PortfolioUploadCard onSaved={() => toast.success("기록이 저장되었어요")} />
         </TabsContent>
       </Tabs>
     </div>

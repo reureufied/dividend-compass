@@ -160,7 +160,7 @@ const Index = () => {
           </div>
           <div className="text-xl font-bold tabular-nums">{formatKRW(Math.round(cur.value))}</div>
           <p className="text-[11px] text-muted-foreground mt-1">
-            {latestDate ? `기준 ${latestDate}` : "스냅샷 없음"}
+            {latestDate ? `기준 ${latestDate}` : "기록 없음"}
           </p>
         </Card>
 
@@ -186,7 +186,7 @@ const Index = () => {
             {prev.value > 0 ? `${momPct >= 0 ? "+" : ""}${momPct.toFixed(2)}%` : "-"}
           </div>
           <p className="text-[11px] text-muted-foreground mt-1">
-            {prevDate ? `vs ${prevDate}` : "이전 스냅샷 없음"}
+            {prevDate ? `vs ${prevDate}` : "이전 기록 없음"}
           </p>
         </Card>
       </div>

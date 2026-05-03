@@ -88,7 +88,7 @@ export const PortfolioBulkReview = ({
         .from("portfolio_snapshots")
         .upsert(payload, { onConflict: "user_id,snapshot_date,asset_name" });
       if (error) throw error;
-      toast.success(`${payload.length}건이 ${dateStr} 스냅샷으로 저장되었어요 🎉`);
+      toast.success(`${payload.length}건이 ${dateStr} 기록으로 저장되었어요 🎉`);
       onOpenChange(false);
       setRows([]);
       onSaved();
@@ -103,7 +103,7 @@ export const PortfolioBulkReview = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl">
         <DialogHeader>
-          <DialogTitle>보유 종목 검토 & 스냅샷 저장</DialogTitle>
+          <DialogTitle>보유 종목 검토 & 기록 저장</DialogTitle>
           <DialogDescription>
             기준 날짜를 확인하고, 종목·수량·단가·목표 비중(%)을 검토해 주세요. 같은 날짜의 동일 종목은 덮어쓰기 됩니다.
           </DialogDescription>
@@ -229,7 +229,7 @@ export const PortfolioBulkReview = ({
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
             <Button onClick={handleSave} disabled={saving || validCount === 0} className="bg-gradient-primary hover:opacity-90">
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {validCount}건 스냅샷 저장
+              {validCount}건 기록 저장
             </Button>
           </div>
         </DialogFooter>

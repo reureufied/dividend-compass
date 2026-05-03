@@ -45,7 +45,7 @@ export const AppLayout = () => {
       </header>
 
       {/* Desktop side nav + content */}
-      <div className="container py-6 md:py-8 md:flex md:gap-8">
+      <div className="container py-4 md:py-8 md:flex md:gap-8">
         <aside className="hidden md:block w-56 shrink-0">
           <nav className="sticky top-24 space-y-1">
             {navItems.map(({ to, label, icon: Icon, end }) => (
