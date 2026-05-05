@@ -58,8 +58,13 @@ export const DividendUploadCard = ({ fxRate, onSaved, onToggleManual, manualOpen
       const results = payload?.results;
       if (Array.isArray(results) && results.length > 0) {
         const drafts: DraftRow[] = results.map(toDraftRow).map((d) => {
-          const raw = d.asset_name?.trim();
+          const original = d.asset_name?.trim();
+          const cleaned = original ? cleanAssetName(original) : original;
+          const raw = cleaned;
           if (!raw) return d;
+          // If cleaning changed the name, surface as auto_mapped for review
+          let mapped = cleaned !== original ? { ...d, asset_name: cleaned, auto_mapped: true, original_name: original } : { ...d, asset_name: cleaned };
+          d = mapped;
           const nraw = normalizeAsset(raw);
           const exact = knownNames.find((k) => normalizeAsset(k) === nraw);
           if (exact && exact !== raw) return { ...d, asset_name: exact, auto_mapped: true, original_name: raw };
