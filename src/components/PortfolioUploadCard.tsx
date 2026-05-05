@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { HoldingDraft, PortfolioBulkReview, toHoldingDraft } from "@/components/PortfolioBulkReview";
 import { useKnownAssetNames } from "@/hooks/useKnownAssetNames";
-import { normalizeAsset, similarity } from "@/lib/assetMatch";
+import { cleanAssetName, normalizeAsset, similarity } from "@/lib/assetMatch";
 
 interface Props {
   onSaved: () => void;
