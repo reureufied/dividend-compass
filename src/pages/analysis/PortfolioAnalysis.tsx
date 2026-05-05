@@ -310,12 +310,29 @@ const PortfolioAnalysis = () => {
                           data={view1Rows.map((r) => ({ name: r.asset_name, value: Number(r.value.toFixed(0)) }))}
                           dataKey="value"
                           nameKey="name"
-                          outerRadius={100}
-                          label={(e: any) => `${e.name} ${e.percent ? (e.percent * 100).toFixed(1) : 0}%`}
+                          outerRadius={90}
+                          label={(e: any) => (e.percent && e.percent > 0.04 ? `${(e.percent * 100).toFixed(0)}%` : "")}
+                          labelLine={false}
                         >
                           {view1Rows.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                         </Pie>
                         <Tooltip formatter={(v: number) => formatKRW(v)} />
+                        <Legend
+                          verticalAlign="bottom"
+                          align="left"
+                          content={({ payload }: any) => (
+                            <div className="overflow-x-auto pt-2">
+                              <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs min-w-max">
+                                {payload?.map((entry: any, idx: number) => (
+                                  <li key={idx} className="flex items-center gap-1.5 whitespace-nowrap">
+                                    <span className="inline-block h-2 w-2 rounded-full shrink-0" style={{ background: entry.color }} />
+                                    <span>{entry.value}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
