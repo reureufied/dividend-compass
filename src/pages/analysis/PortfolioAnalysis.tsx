@@ -19,6 +19,7 @@ import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DateFilterBar, DateRange, computeRange } from "@/components/DateFilterBar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,8 @@ interface Snapshot {
   avg_purchase_price: number;
   current_price: number;
   target_weight: number;
+  created_at: string;
+  updated_at: string;
 }
 
 const COLORS = [
