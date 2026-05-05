@@ -261,6 +261,10 @@ const PortfolioAnalysis = () => {
         </p>
       </div>
 
+      <Card className="p-4 shadow-elev-sm animate-fade-in">
+        <DateFilterBar value={range} onChange={setRange} />
+      </Card>
+
       <Tabs defaultValue="point" className="space-y-4">
         <TabsList>
           <TabsTrigger value="point">특정 시점 분석</TabsTrigger>
