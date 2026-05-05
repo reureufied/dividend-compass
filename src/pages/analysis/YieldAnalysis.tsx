@@ -219,11 +219,11 @@ const YieldAnalysis = () => {
                 현재 보유 기록이 없는 종목이에요. 과거에 받은 배당금만 합산해 표시합니다.
               </p>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-[500px] overflow-y-auto relative">
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 z-30 bg-background shadow-md">
                   <TableRow>
-                    <TableHead>종목명</TableHead>
+                    <TableHead className="sticky left-0 z-40 bg-background border-r border-border">종목명</TableHead>
                     <TableHead className="text-right">투자원금</TableHead>
                     <TableHead className="text-right">총 누적 배당금</TableHead>
                   </TableRow>
@@ -231,7 +231,7 @@ const YieldAnalysis = () => {
                 <TableBody>
                   {soldRows.map((r) => (
                     <TableRow key={r.name}>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium sticky left-0 z-20 bg-background border-r border-border">
                         {r.name} <span className="text-xs text-muted-foreground ml-1">(매도됨)</span>
                       </TableCell>
                       <TableCell className="text-right tabular-nums text-muted-foreground">0원</TableCell>
