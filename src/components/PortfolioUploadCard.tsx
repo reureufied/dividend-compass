@@ -55,6 +55,7 @@ export const PortfolioUploadCard = ({ onSaved }: Props) => {
         }
         console.error("parse-portfolio-screenshot error", error, payload);
       }
+      console.log("[Gemini가 실제로 보낸 답변 내용 - portfolio]", payload);
       const results = payload?.results;
       if (Array.isArray(results) && results.length > 0) {
         const drafts: HoldingDraft[] = results.map(toHoldingDraft).map((d) => {

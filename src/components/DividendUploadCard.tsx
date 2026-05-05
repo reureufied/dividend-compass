@@ -54,6 +54,7 @@ export const DividendUploadCard = ({ fxRate, onSaved, onToggleManual, manualOpen
         }
         console.error("parse-dividend-screenshot error", error, payload);
       }
+      console.log("[Gemini가 실제로 보낸 답변 내용 - dividend]", payload);
       const results = payload?.results;
       if (Array.isArray(results) && results.length > 0) {
         const drafts: DraftRow[] = results.map(toDraftRow).map((d) => {
