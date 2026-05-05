@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { format, subMonths } from "date-fns";
+import { format } from "date-fns";
 import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -59,9 +59,7 @@ const PortfolioAnalysis = () => {
   const [range, setRange] = useState<DateRange>(computeRange("3m"));
   // View 1: selected date
   const [selectedDate, setSelectedDate] = useState<string>("");
-  // View 2: time series
-  const [periodMonths, setPeriodMonths] = useState<number>(6);
-  const [focusAsset, setFocusAsset] = useState<string>("");
+  // View 2 uses the top-level date range
   // View 3: asset-centric trend
   const [trendAsset, setTrendAsset] = useState<string>("");
   const [trendSortAsc, setTrendSortAsc] = useState<boolean>(true);
