@@ -71,6 +71,7 @@ const PortfolioAnalysis = () => {
   const [deleteDateTarget, setDeleteDateTarget] = useState<string | null>(null);
   const [editDateTarget, setEditDateTarget] = useState<string | null>(null);
   const [editDateNew, setEditDateNew] = useState<Date>(new Date());
+  const [editDatePopoverOpen, setEditDatePopoverOpen] = useState(false);
   const [dateOpsLoading, setDateOpsLoading] = useState(false);
 
   useEffect(() => {
