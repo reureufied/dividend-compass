@@ -131,7 +131,7 @@ const Auth = () => {
     try {
       if (mode === "signup") {
         const name = displayName.trim() || u.data;
-        const { data: signUpData, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password: p.data,
           options: {
@@ -140,10 +140,7 @@ const Auth = () => {
           },
         });
         if (error) throw error;
-        const uid = signUpData.user?.id;
-        if (uid) {
-          await supabase.from("profiles").update({ display_name: name }).eq("id", uid);
-        }
+        // profiles 행은 on_auth_user_created 트리거(handle_new_user)가 자동 생성합니다.
         showDialog("가입 완료", "회원가입이 완료되었습니다. 대시보드로 이동합니다.", () => navigate("/"));
       } else {
         let lastError: AuthErrorLike | null = null;
