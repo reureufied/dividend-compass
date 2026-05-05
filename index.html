@@ -1,24 +1,27 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <!-- TODO: Set the document title to the name of your application -->
-    <title>Lovable App</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
+    
+    <!-- 앱 이름 설정 -->
+    <title>Portfolio Lab</title>
+    <meta name="description" content="데이터로 분석하는 스마트한 투자 연구소, Portfolio Lab" />
+    <meta name="author" content="reureufied" />
 
-    <!-- TODO: Update og:title to match your application name -->
-    <meta property="og:title" content="Lovable App" />
-    <meta property="og:description" content="Lovable Generated Project" />
+    <!-- Open Graph (카톡, 페북 공유 시 보이는 정보) -->
+    <meta property="og:title" content="Portfolio Lab" />
+    <meta property="og:description" content="내 포트폴리오를 한눈에 확인하고 정밀하게 분석하세요." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:image" content="/workspaces/dividend-compass/public/favicon.ico" />
 
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:title" content="Portfolio Lab" />
+    <meta name="twitter:description" content="내 포트폴리오를 한눈에 확인하고 정밀하게 분석하세요." />
+    
     <script type="text/javascript">
-      // GitHub Pages SPA: restore path forwarded by 404.html
+      // GitHub Pages SPA 대응 스크립트 (유지)
       (function () {
         if (window.location.search.indexOf("?/") === 0 || window.location.search.indexOf("&/") !== -1) {
           var q = window.location.search.slice(1).split("&").map(function (s) {
@@ -30,8 +33,8 @@
             null,
             null,
             window.location.pathname.replace(/\/$/, "") + "/" + route +
-              (rest ? "?" + rest : "") +
-              window.location.hash
+            (rest ? "?" + rest : "") +
+            window.location.hash
           );
         }
       })();

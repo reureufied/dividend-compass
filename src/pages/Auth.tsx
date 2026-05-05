@@ -22,15 +22,14 @@ import {
 // Internal-only domains used to back ID-based auth on top of email auth.
 // Keep the legacy domain so accounts created before the ID-login update can still sign in.
 const ID_DOMAINS = ["local.compass", "id.local"] as const;
-const usernameToEmail = (u: string, domain: string = ID_DOMAINS[0]) => `${u.trim().toLowerCase()}@${domain}`;
-const usernameToLoginEmails = (u: string) => ID_DOMAINS.map((domain) => usernameToEmail(u, domain));
+const usernameToEmail = (email: string) => email.trim().toLowerCase();
+const usernameToLoginEmails = (email: string) => [usernameToEmail(email)];
 
 const usernameSchema = z
   .string()
   .trim()
-  .min(3, "아이디는 3자 이상이어야 합니다")
-  .max(30, "아이디는 30자 이하여야 합니다")
-  .regex(/^[a-zA-Z0-9_.-]+$/, "영문, 숫자, _ . - 만 사용할 수 있습니다");
+  .min(1, "이메일을 입력해주세요")
+  .email("유효한 이메일 주소 형식이 아닙니다");
 
 const passwordSchema = z
   .string()
@@ -203,7 +202,7 @@ const Auth = () => {
                   <Input
                     id={`username-${mode}`}
                     type="text"
-                    placeholder="예: reureu"
+                    placeholder="예: reureufied@gmail.com"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     autoComplete="username"

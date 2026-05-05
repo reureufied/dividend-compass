@@ -1,23 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { format } from "date-fns";
 import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
-import { CalendarIcon, Loader2, Pencil, Trash2 } from "lucide-react";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { EditHoldingDialog } from "@/components/EditHoldingDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DateFilterBar, DateRange, computeRange } from "@/components/DateFilterBar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -57,26 +45,9 @@ const PortfolioAnalysis = () => {
   const [snaps, setSnaps] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<DateRange>(computeRange("3m"));
-  // View 1: selected date
   const [selectedDate, setSelectedDate] = useState<string>("");
-  // View 2 uses the top-level date range
-  // View 3: asset-centric trend
   const [trendAsset, setTrendAsset] = useState<string>("");
   const [trendSortAsc, setTrendSortAsc] = useState<boolean>(true);
-
-  // Snapshot manager
-  const [editHolding, setEditHolding] = useState<Snapshot | null>(null);
-  const [editHoldingOpen, setEditHoldingOpen] = useState(false);
-  const [deleteRowId, setDeleteRowId] = useState<string | null>(null);
-  const [deleteDateTarget, setDeleteDateTarget] = useState<string | null>(null);
-  const [editDateTarget, setEditDateTarget] = useState<string | null>(null);
-  const [editDateNew, setEditDateNew] = useState<Date>(new Date());
-  const [editDatePopoverOpen, setEditDatePopoverOpen] = useState(false);
-  const [dateOpsLoading, setDateOpsLoading] = useState(false);
-
-  useEffect(() => {
-    // title controlled by parent Analysis page
-  }, []);
 
   const loadSnaps = async () => {
     if (!user) return;
@@ -90,9 +61,8 @@ const PortfolioAnalysis = () => {
     setLoading(false);
   };
 
-  useEffect(() => { loadSnaps(); /* eslint-disable-next-line */ }, [user]);
+  useEffect(() => { loadSnaps(); }, [user]);
 
-  // Filter snapshots by created_at / updated_at within selected range
   const filteredSnaps = useMemo(() => {
     const fromMs = range.from.getTime();
     const toMs = new Date(range.to).setHours(23, 59, 59, 999);
@@ -104,7 +74,6 @@ const PortfolioAnalysis = () => {
     });
   }, [snaps, range]);
 
-  // Available distinct dates (newest first)
   const distinctDates = useMemo(() => {
     return Array.from(new Set(filteredSnaps.map((s) => s.snapshot_date))).sort((a, b) => (a < b ? 1 : -1));
   }, [filteredSnaps]);
@@ -113,7 +82,6 @@ const PortfolioAnalysis = () => {
     if (!selectedDate && distinctDates.length > 0) setSelectedDate(distinctDates[0]);
   }, [distinctDates, selectedDate]);
 
-  // ====== View 1 calculations ======
   const view1Rows = useMemo(() => {
     const rows = filteredSnaps.filter((s) => s.snapshot_date === selectedDate);
     const enriched = rows.map((s) => {
@@ -145,7 +113,6 @@ const PortfolioAnalysis = () => {
     [view1Rows]
   );
 
-  // ====== View 2 calculations (time-series) — uses top-level range ======
   const seriesData = useMemo(() => {
     const byDate = new Map<string, { date: string; principal: number; value: number }>();
     filteredSnaps.forEach((s) => {
@@ -159,10 +126,9 @@ const PortfolioAnalysis = () => {
 
   const allAssets = useMemo(() => Array.from(new Set(filteredSnaps.map((s) => s.asset_name))).sort(), [filteredSnaps]);
 
-  // ====== View 3: asset-centric trend (all-time) ======
   const trendRows = useMemo(() => {
     if (!trendAsset) return [];
-    const rows = filteredSnaps
+    return filteredSnaps
       .filter((s) => s.asset_name === trendAsset)
       .map((s) => {
         const principal = s.quantity * s.avg_purchase_price;
@@ -178,7 +144,6 @@ const PortfolioAnalysis = () => {
         };
       })
       .sort((a, b) => (a.date < b.date ? -1 : 1));
-    return rows;
   }, [filteredSnaps, trendAsset]);
 
   const trendTableRows = useMemo(() => {
@@ -187,53 +152,12 @@ const PortfolioAnalysis = () => {
     return arr;
   }, [trendRows, trendSortAsc]);
 
-  const deleteSnapshotDate = async (date: string) => {
-    if (!user) return;
-    setDateOpsLoading(true);
-    const { error } = await supabase
-      .from("portfolio_snapshots")
-      .delete()
-      .eq("user_id", user.id)
-      .eq("snapshot_date", date);
-    setDateOpsLoading(false);
-    if (error) return toast.error(error.message);
-    toast.success("삭제되었어요");
-    setDeleteDateTarget(null);
-    loadSnaps();
-  };
-
-  const deleteHoldingRow = async (id: string) => {
-    const { error } = await supabase.from("portfolio_snapshots").delete().eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success("삭제되었어요");
-    setDeleteRowId(null);
-    loadSnaps();
-  };
-
-  const updateSnapshotDate = async () => {
-    if (!user || !editDateTarget) return;
-    const newDate = format(editDateNew, "yyyy-MM-dd");
-    if (newDate === editDateTarget) { setEditDateTarget(null); return; }
-    setDateOpsLoading(true);
-    const { error } = await supabase
-      .from("portfolio_snapshots")
-      .update({ snapshot_date: newDate })
-      .eq("user_id", user.id)
-      .eq("snapshot_date", editDateTarget);
-    setDateOpsLoading(false);
-    if (error) return toast.error(error.message);
-    toast.success(`${editDateTarget} → ${newDate} 로 변경되었어요`);
-    if (selectedDate === editDateTarget) setSelectedDate(newDate);
-    setEditDateTarget(null);
-    loadSnaps();
-  };
-
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">포트폴리오 분석</h2>
         <p className="text-muted-foreground text-sm mt-1">
-          월별 자산 기록을 기록하고, 비중·수익률·시계열 변동을 분석하세요.
+          자산 기록을 바탕으로 비중, 수익률, 시계열 변동을 시각화합니다.
         </p>
       </div>
 
@@ -246,13 +170,12 @@ const PortfolioAnalysis = () => {
           <TabsTrigger value="point">시점 분석</TabsTrigger>
           <TabsTrigger value="series">변동 추이</TabsTrigger>
           <TabsTrigger value="trend">종목 추이</TabsTrigger>
-          <TabsTrigger value="manage">기록</TabsTrigger>
         </TabsList>
 
-        {/* ===== View 1 ===== */}
+        {/* ===== View 1: 시점 분석 ===== */}
         <TabsContent value="point" className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm font-medium">기준 기록 날짜</span>
+            <span className="text-sm font-medium">조회 날짜 선택</span>
             <Select value={selectedDate} onValueChange={setSelectedDate}>
               <SelectTrigger className="w-[220px]">
                 <SelectValue placeholder="날짜 선택" />
@@ -263,28 +186,23 @@ const PortfolioAnalysis = () => {
                 ))}
               </SelectContent>
             </Select>
-            {selectedDate && (
-              <Button variant="ghost" size="sm" onClick={() => setDeleteDateTarget(selectedDate)}>
-                <Trash2 className="h-4 w-4 mr-1 text-destructive" /> 이 날짜 삭제
-              </Button>
-            )}
           </div>
 
           {loading ? (
             <Card className="p-10 text-center text-muted-foreground">불러오는 중…</Card>
           ) : view1Rows.length === 0 ? (
-            <Card className="p-10 text-center text-muted-foreground">
-              저장된 기록이 없어요. 위에서 스크린샷을 업로드해 보세요.
+            <Card className="p-10 text-center text-muted-foreground italic">
+              해당 기간에 저장된 기록이 없습니다.
             </Card>
           ) : (
             <>
               <div className="grid gap-4 md:grid-cols-4">
                 <Card className="p-4">
-                  <p className="text-xs text-muted-foreground">투자 원금 합계</p>
+                  <p className="text-xs text-muted-foreground">투자 원금</p>
                   <p className="text-xl font-bold mt-1">{formatKRW(Math.round(view1Totals.principal))}</p>
                 </Card>
                 <Card className="p-4">
-                  <p className="text-xs text-muted-foreground">평가 금액 합계</p>
+                  <p className="text-xs text-muted-foreground">평가 금액</p>
                   <p className="text-xl font-bold mt-1">{formatKRW(Math.round(view1Totals.value))}</p>
                 </Card>
                 <Card className="p-4">
@@ -303,7 +221,7 @@ const PortfolioAnalysis = () => {
 
               <div className="grid gap-4 lg:grid-cols-2">
                 <Card className="p-5">
-                  <h3 className="font-semibold mb-3">현재 비중 (평가금액 기준)</h3>
+                  <h3 className="font-semibold mb-3">현재 자산 비중</h3>
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -318,29 +236,14 @@ const PortfolioAnalysis = () => {
                           {view1Rows.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                         </Pie>
                         <Tooltip formatter={(v: number) => formatKRW(v)} />
-                        <Legend
-                          verticalAlign="bottom"
-                          align="left"
-                          content={({ payload }: any) => (
-                            <div className="overflow-x-auto pt-2">
-                              <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs min-w-max">
-                                {payload?.map((entry: any, idx: number) => (
-                                  <li key={idx} className="flex items-center gap-1.5 whitespace-nowrap">
-                                    <span className="inline-block h-2 w-2 rounded-full shrink-0" style={{ background: entry.color }} />
-                                    <span>{entry.value}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        />
+                        <Legend verticalAlign="bottom" align="left" iconType="circle" />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
                 </Card>
 
                 <Card className="p-5">
-                  <h3 className="font-semibold mb-3">목표 비중 vs 현재 비중 (%)</h3>
+                  <h3 className="font-semibold mb-3">목표 vs 현재 비중 (%)</h3>
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={weightCompareData}>
@@ -349,60 +252,41 @@ const PortfolioAnalysis = () => {
                         <YAxis tick={{ fontSize: 11 }} unit="%" />
                         <Tooltip />
                         <Legend />
-                        <Bar dataKey="목표 비중" fill="hsl(var(--muted-foreground))" radius={[6, 6, 0, 0]} />
-                        <Bar dataKey="현재 비중" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                        <Bar dataKey="목표 비중" fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="현재 비중" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </Card>
               </div>
 
-              <Card className="p-0 overflow-hidden">
-                <div className="overflow-x-auto max-h-[600px] overflow-y-auto relative">
+              <Card className="p-0 overflow-hidden shadow-none border">
+                <div className="overflow-x-auto relative">
                   <Table>
-                    <TableHeader className="sticky top-0 z-30 bg-background shadow-md">
+                    <TableHeader className="bg-muted/50">
                       <TableRow>
-                        <TableHead className="sticky left-0 z-40 bg-background border-r border-border">종목명</TableHead>
+                        <TableHead className="font-bold">종목명</TableHead>
                         <TableHead className="text-right">수량</TableHead>
                         <TableHead className="text-right">매수단가</TableHead>
                         <TableHead className="text-right">현재단가</TableHead>
-                        <TableHead className="text-right">투자원금</TableHead>
-                        <TableHead className="text-right">평가금액</TableHead>
-                        <TableHead className="text-right">손익</TableHead>
+                        <TableHead className="text-right font-semibold">평가금액</TableHead>
                         <TableHead className="text-right">수익률</TableHead>
-                        <TableHead className="text-right">목표 비중</TableHead>
                         <TableHead className="text-right">현재 비중</TableHead>
-                        <TableHead className="text-right w-[120px]">관리</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {view1Rows.map((r) => (
                         <TableRow key={r.id}>
-                          <TableCell className="font-medium sticky left-0 z-20 bg-background border-r border-border">{r.asset_name}</TableCell>
-                          <TableCell className="text-right">{r.quantity.toLocaleString()}</TableCell>
-                          <TableCell className="text-right">{r.avg_purchase_price.toLocaleString()}</TableCell>
-                          <TableCell className="text-right">{r.current_price.toLocaleString()}</TableCell>
-                          <TableCell className="text-right">{formatKRW(Math.round(r.principal))}</TableCell>
-                          <TableCell className="text-right">{formatKRW(Math.round(r.value))}</TableCell>
-                          <TableCell className={cn("text-right font-medium", r.pnl >= 0 ? "text-emerald-500" : "text-destructive")}>
-                            {r.pnl >= 0 ? "+" : ""}{formatKRW(Math.round(r.pnl))}
-                          </TableCell>
-                          <TableCell className={cn("text-right font-medium", r.yieldPct >= 0 ? "text-emerald-500" : "text-destructive")}>
+                          <TableCell className="font-medium">{r.asset_name}</TableCell>
+                          <TableCell className="text-right tabular-nums">{r.quantity.toLocaleString()}</TableCell>
+                          <TableCell className="text-right tabular-nums">{r.avg_purchase_price.toLocaleString()}</TableCell>
+                          <TableCell className="text-right tabular-nums">{r.current_price.toLocaleString()}</TableCell>
+                          <TableCell className="text-right font-semibold tabular-nums">{formatKRW(Math.round(r.value))}</TableCell>
+                          <TableCell className={cn("text-right font-medium tabular-nums", r.yieldPct >= 0 ? "text-emerald-500" : "text-destructive")}>
                             {r.yieldPct >= 0 ? "+" : ""}{r.yieldPct.toFixed(2)}%
                           </TableCell>
-                          <TableCell className="text-right">{r.target_weight.toFixed(1)}%</TableCell>
                           <TableCell className="text-right">
-                            <Badge variant="secondary">{r.currentWeight.toFixed(1)}%</Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditHolding(r); setEditHoldingOpen(true); }}>
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDeleteRowId(r.id)}>
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
+                            <Badge variant="secondary" className="font-mono">{r.currentWeight.toFixed(1)}%</Badge>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -414,90 +298,35 @@ const PortfolioAnalysis = () => {
           )}
         </TabsContent>
 
-        {/* ===== View 2 ===== */}
+        {/* ===== View 2: 변동 추이 ===== */}
         <TabsContent value="series" className="space-y-4">
           <Card className="p-5">
-            <h3 className="font-semibold mb-3">총 투자원금 vs 평가금액 추이</h3>
+            <h3 className="font-semibold mb-3">투자원금 vs 평가금액 추이</h3>
             <div className="h-[320px]">
               {seriesData.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-                  해당 기간에 저장된 기록이 없어요.
-                </div>
+                <div className="h-full flex items-center justify-center text-muted-foreground text-sm italic">데이터가 없습니다.</div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={seriesData}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                     <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} domain={["dataMin", "dataMax"]} tickFormatter={(v) => `${(Number(v) / 10000).toFixed(0)}만`} />
+                    <YAxis tick={{ fontSize: 11 }} domain={["auto", "auto"]} tickFormatter={(v) => `${(Number(v) / 10000).toFixed(0)}만`} />
                     <Tooltip formatter={(v: number) => formatKRW(Math.round(v))} />
                     <Legend />
-                    <Line type="monotone" dataKey="principal" name="투자원금" stroke="hsl(var(--muted-foreground))" strokeWidth={2} />
-                    <Line type="monotone" dataKey="value" name="평가금액" stroke="hsl(var(--primary))" strokeWidth={2} />
+                    <Line type="monotone" dataKey="principal" name="투자원금" stroke="hsl(var(--muted-foreground))" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="value" name="평가금액" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} />
                   </LineChart>
                 </ResponsiveContainer>
               )}
             </div>
           </Card>
-
-          <Card className="p-5">
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              <h3 className="font-semibold">종목별 추이</h3>
-              <Select value={trendAsset} onValueChange={setTrendAsset}>
-                <SelectTrigger className="w-[220px]">
-                  <SelectValue placeholder="종목 선택" />
-                </SelectTrigger>
-                <SelectContent>
-                  {allAssets.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            {!trendAsset ? (
-              <p className="text-sm text-muted-foreground">종목을 선택하면 전체 기간의 수량·평가금액·투자원금 추이를 보여드려요.</p>
-            ) : trendRows.length === 0 ? (
-              <p className="text-sm text-muted-foreground">해당 종목의 기록이 없어요.</p>
-            ) : (
-              <div className="grid gap-4 lg:grid-cols-2">
-                <div>
-                  <h4 className="font-medium text-sm mb-2">수량 변동 추이</h4>
-                  <div className="h-[280px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={trendRows}>
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} domain={["dataMin", "dataMax"]} />
-                        <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="quantity" name="수량(주)" stroke="hsl(var(--primary))" strokeWidth={2} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-medium text-sm mb-2">평가금액 vs 투자원금 추이</h4>
-                  <div className="h-[280px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={trendRows}>
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} domain={["dataMin", "dataMax"]} tickFormatter={(v) => `${(Number(v) / 10000).toFixed(0)}만`} />
-                        <Tooltip formatter={(v: number) => formatKRW(Math.round(v))} />
-                        <Legend />
-                        <Line type="monotone" dataKey="principal" name="투자원금" stroke="hsl(var(--muted-foreground))" strokeWidth={2} />
-                        <Line type="monotone" dataKey="value" name="평가금액" stroke="hsl(var(--primary))" strokeWidth={2} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </div>
-            )}
-          </Card>
         </TabsContent>
 
-        {/* ===== View 3: Asset-centric Trend ===== */}
+        {/* ===== View 3: 종목 추이 ===== */}
         <TabsContent value="trend" className="space-y-4">
           <Card className="p-5">
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              <span className="text-sm font-medium">종목 선택</span>
+            <div className="flex flex-wrap items-center gap-3 mb-6">
+              <span className="text-sm font-medium">분석 종목</span>
               <Select value={trendAsset} onValueChange={setTrendAsset}>
                 <SelectTrigger className="w-[260px]">
                   <SelectValue placeholder="종목을 선택하세요" />
@@ -509,210 +338,44 @@ const PortfolioAnalysis = () => {
             </div>
 
             {!trendAsset ? (
-              <p className="text-sm text-muted-foreground">종목을 선택하면 전체 기간의 수량·평가금액·투자원금 추이를 보여드려요.</p>
-            ) : trendRows.length === 0 ? (
-              <p className="text-sm text-muted-foreground">해당 종목의 기록이 없어요.</p>
+              <div className="h-40 flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed rounded-xl">
+                종목을 선택하면 과거부터 현재까지의 상세 데이터를 분석합니다.
+              </div>
             ) : (
-              <div className="grid gap-4 lg:grid-cols-2">
-                <div>
-                  <h3 className="font-semibold mb-2">수량 변동 추이</h3>
+              <div className="grid gap-6 lg:grid-cols-2">
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-center">수량 변동 추이</h4>
                   <div className="h-[280px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={trendRows}>
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                         <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} domain={["dataMin", "dataMax"]} />
+                        <YAxis tick={{ fontSize: 11 }} domain={["auto", "auto"]} />
                         <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="quantity" name="수량(주)" stroke="hsl(var(--primary))" strokeWidth={2} />
+                        <Line type="stepAfter" dataKey="quantity" name="수량" stroke="hsl(var(--primary))" strokeWidth={2} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold mb-2">평가금액 vs 투자원금 추이</h3>
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-center">수익률 추이</h4>
                   <div className="h-[280px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={trendRows}>
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                      <LineChart data={trendRows.map(r => ({ ...r, yield: r.principal > 0 ? ((r.value - r.principal) / r.principal) * 100 : 0 }))}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                         <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} domain={["dataMin", "dataMax"]} tickFormatter={(v) => `${(Number(v) / 10000).toFixed(0)}만`} />
-                        <Tooltip formatter={(v: number) => formatKRW(Math.round(v))} />
-                        <Legend />
-                        <Line type="monotone" dataKey="principal" name="투자원금" stroke="hsl(var(--muted-foreground))" strokeWidth={2} />
-                        <Line type="monotone" dataKey="value" name="평가금액" stroke="hsl(var(--primary))" strokeWidth={2} />
+                        <YAxis tick={{ fontSize: 11 }} unit="%" />
+                        <Tooltip formatter={(v: number) => `${v.toFixed(2)}%`} />
+                        <Line type="monotone" dataKey="yield" name="수익률" stroke="hsl(var(--primary))" strokeWidth={2} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
               </div>
-            )}
-          </Card>
-
-          {trendAsset && trendRows.length > 0 && (
-            <Card className="p-0 overflow-hidden">
-              <div className="flex items-center justify-between p-4">
-                <h3 className="font-semibold">{trendAsset} · 기록 히스토리</h3>
-                <Button variant="outline" size="sm" onClick={() => setTrendSortAsc((v) => !v)}>
-                  날짜 {trendSortAsc ? "오름차순 ↑" : "내림차순 ↓"}
-                </Button>
-              </div>
-              <div className="overflow-x-auto max-h-[600px] overflow-y-auto relative">
-                <Table>
-                  <TableHeader className="sticky top-0 z-30 bg-background shadow-md">
-                    <TableRow>
-                      <TableHead className="sticky left-0 z-40 bg-background border-r border-border">날짜</TableHead>
-                      <TableHead className="text-right">수량</TableHead>
-                      <TableHead className="text-right">매수단가</TableHead>
-                      <TableHead className="text-right">현재단가</TableHead>
-                      <TableHead className="text-right">투자원금</TableHead>
-                      <TableHead className="text-right">평가금액</TableHead>
-                      <TableHead className="text-right">손익금</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {trendTableRows.map((r) => (
-                      <TableRow key={r.date}>
-                        <TableCell className="font-medium sticky left-0 z-20 bg-background border-r border-border">{r.date}</TableCell>
-                        <TableCell className="text-right">{r.quantity.toLocaleString()}</TableCell>
-                        <TableCell className="text-right">{r.avg_purchase_price.toLocaleString()}</TableCell>
-                        <TableCell className="text-right">{r.current_price.toLocaleString()}</TableCell>
-                        <TableCell className="text-right">{formatKRW(Math.round(r.principal))}</TableCell>
-                        <TableCell className="text-right">{formatKRW(Math.round(r.value))}</TableCell>
-                        <TableCell className={cn("text-right font-medium", r.pnl >= 0 ? "text-emerald-500" : "text-destructive")}>
-                          {r.pnl >= 0 ? "+" : ""}{formatKRW(Math.round(r.pnl))}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </Card>
-          )}
-        </TabsContent>
-
-        {/* ===== Snapshot Manager ===== */}
-        <TabsContent value="manage" className="space-y-4">
-          <Card className="p-0 overflow-hidden">
-            {distinctDates.length === 0 ? (
-              <div className="p-10 text-center text-muted-foreground">저장된 기록이 없어요.</div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>기록 날짜</TableHead>
-                    <TableHead className="text-right">종목 수</TableHead>
-                    <TableHead className="text-right">평가금액 합계</TableHead>
-                    <TableHead className="text-right w-[260px]">관리</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {distinctDates.map((d) => {
-                    const rows = filteredSnaps.filter((s) => s.snapshot_date === d);
-                    const value = rows.reduce((a, b) => a + b.quantity * b.current_price, 0);
-                    return (
-                      <TableRow key={d}>
-                        <TableCell className="font-medium">{d}</TableCell>
-                        <TableCell className="text-right">{rows.length}</TableCell>
-                        <TableCell className="text-right">{formatKRW(Math.round(value))}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button variant="outline" size="sm" onClick={() => { setSelectedDate(d); }}>
-                              조회
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => {
-                              setEditDateTarget(d);
-                              setEditDateNew(new Date(d));
-                            }}>
-                              <Pencil className="h-4 w-4 mr-1" /> 날짜 수정
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => setDeleteDateTarget(d)}>
-                              <Trash2 className="h-4 w-4 mr-1 text-destructive" /> 삭제
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
             )}
           </Card>
         </TabsContent>
       </Tabs>
-
-      <EditHoldingDialog
-        open={editHoldingOpen}
-        onOpenChange={setEditHoldingOpen}
-        holding={editHolding}
-        onSaved={loadSnaps}
-      />
-
-      {/* Delete single row */}
-      <AlertDialog open={!!deleteRowId} onOpenChange={(o) => !o && setDeleteRowId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>이 종목 기록을 삭제할까요?</AlertDialogTitle>
-            <AlertDialogDescription>해당 기록에서 이 종목 행이 삭제됩니다.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteRowId && deleteHoldingRow(deleteRowId)}>삭제</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Delete entire date */}
-      <AlertDialog open={!!deleteDateTarget} onOpenChange={(o) => !o && setDeleteDateTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>해당 날짜의 모든 자산 기록을 삭제하시겠습니까?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteDateTarget} 기록에 속한 모든 종목 행이 영구적으로 삭제됩니다.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteDateTarget && deleteSnapshotDate(deleteDateTarget)}>
-              {dateOpsLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}삭제
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Edit snapshot date (bulk) */}
-      <Dialog open={!!editDateTarget} onOpenChange={(o) => !o && setEditDateTarget(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>기록 날짜 일괄 변경</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{editDateTarget}</span> 의 모든 종목 기록 날짜를 아래 날짜로 변경합니다.
-            </p>
-            <div className="grid gap-1.5">
-              <Label>새 기준 날짜</Label>
-              <Popover open={editDatePopoverOpen} onOpenChange={setEditDatePopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(editDateNew, "yyyy.MM.dd")}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={editDateNew} onSelect={(d) => { if (d) { setEditDateNew(d); setEditDatePopoverOpen(false); } }} initialFocus className="p-3 pointer-events-auto" />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditDateTarget(null)}>취소</Button>
-            <Button onClick={updateSnapshotDate} disabled={dateOpsLoading}>
-              {dateOpsLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}저장
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
