@@ -78,7 +78,7 @@ ${knownList.length > 0
       required: ["records", "text_readable"],
     };
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
     const aiResp = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -111,13 +111,16 @@ ${knownList.length > 0
 
     const data = await aiResp.json();
     const textOut = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!textOut) return json({ error: "이미지에서 글자를 읽을 수 없습니다. 수동 입력을 이용해 주세요.", code: "OCR_UNREADABLE" }, 422);
+    console.log("[Gemini raw response - dividend]", JSON.stringify(data).slice(0, 4000));
+    if (!textOut) return json({ error: "이미지에서 글자를 읽을 수 없습니다. 수동 입력을 이용해 주세요.", code: "OCR_UNREADABLE", rawResponse: data }, 422);
 
+    const cleaned = cleanJsonText(textOut);
+    console.log("[Gemini cleaned text - dividend]", cleaned.slice(0, 2000));
     let parsed: any;
-    try { parsed = JSON.parse(textOut); }
-    catch {
-      console.error("Failed to parse Gemini JSON:", textOut.slice(0, 500));
-      return json({ error: "AI 응답을 해석하지 못했어요. 수동 입력을 이용해 주세요.", code: "PARSE_ERROR" }, 500);
+    try { parsed = JSON.parse(cleaned); }
+    catch (err) {
+      console.error("Failed to parse Gemini JSON:", err, cleaned.slice(0, 500));
+      return json({ error: "AI 응답을 해석하지 못했어요. 수동 입력을 이용해 주세요.", code: "PARSE_ERROR", rawText: textOut }, 500);
     }
 
     const results = Array.isArray(parsed?.records) ? parsed.records : [];
@@ -134,6 +137,19 @@ ${knownList.length > 0
     return json({ error: "분석 중 오류가 발생했어요. 수동 입력을 이용해 주세요.", code: "FATAL" }, 500);
   }
 });
+
+function cleanJsonText(text: string): string {
+  let cleaned = String(text).replace(/```json/gi, "").replace(/```/g, "").trim();
+  if (!cleaned.startsWith("{") && !cleaned.startsWith("[")) {
+    const objStart = cleaned.indexOf("{");
+    const arrStart = cleaned.indexOf("[");
+    const isArr = arrStart !== -1 && (objStart === -1 || arrStart < objStart);
+    const start = isArr ? arrStart : objStart;
+    const end = isArr ? cleaned.lastIndexOf("]") : cleaned.lastIndexOf("}");
+    if (start !== -1 && end > start) cleaned = cleaned.slice(start, end + 1);
+  }
+  return cleaned;
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
