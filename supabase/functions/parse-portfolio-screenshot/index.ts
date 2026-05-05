@@ -163,6 +163,19 @@ ${knownList.length > 0
   }
 });
 
+function cleanJsonText(text: string): string {
+  let cleaned = String(text).replace(/```json/gi, "").replace(/```/g, "").trim();
+  if (!cleaned.startsWith("{") && !cleaned.startsWith("[")) {
+    const objStart = cleaned.indexOf("{");
+    const arrStart = cleaned.indexOf("[");
+    const isArr = arrStart !== -1 && (objStart === -1 || arrStart < objStart);
+    const start = isArr ? arrStart : objStart;
+    const end = isArr ? cleaned.lastIndexOf("]") : cleaned.lastIndexOf("}");
+    if (start !== -1 && end > start) cleaned = cleaned.slice(start, end + 1);
+  }
+  return cleaned;
+}
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
