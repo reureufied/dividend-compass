@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { BulkReviewDialog, DraftRow, toDraftRow } from "@/components/BulkReviewDialog";
 import { useKnownAssetNames } from "@/hooks/useKnownAssetNames";
-import { normalizeAsset, similarity } from "@/lib/assetMatch";
+import { cleanAssetName, normalizeAsset, similarity } from "@/lib/assetMatch";
 
 interface Props {
   fxRate: number;
