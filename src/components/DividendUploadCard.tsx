@@ -58,23 +58,21 @@ export const DividendUploadCard = ({ fxRate, onSaved, onToggleManual, manualOpen
       const results = payload?.results;
       if (Array.isArray(results) && results.length > 0) {
         const drafts: DraftRow[] = results.map(toDraftRow).map((d) => {
-          const original = d.asset_name?.trim();
-          const cleaned = original ? cleanAssetName(original) : original;
-          const raw = cleaned;
-          if (!raw) return d;
-          // If cleaning changed the name, surface as auto_mapped for review
-          let mapped = cleaned !== original ? { ...d, asset_name: cleaned, auto_mapped: true, original_name: original } : { ...d, asset_name: cleaned };
-          d = mapped;
-          const nraw = normalizeAsset(raw);
-          const exact = knownNames.find((k) => normalizeAsset(k) === nraw);
-          if (exact && exact !== raw) return { ...d, asset_name: exact, auto_mapped: true, original_name: raw };
+          const original = d.asset_name?.trim() ?? "";
+          const cleaned = cleanAssetName(original);
+          if (!cleaned) return d;
+          const baseOriginal = cleaned !== original ? original : undefined;
+          d = { ...d, asset_name: cleaned, ...(baseOriginal ? { auto_mapped: true, original_name: baseOriginal } : {}) };
+          const ncleaned = normalizeAsset(cleaned);
+          const exact = knownNames.find((k) => normalizeAsset(k) === ncleaned);
+          if (exact && exact !== cleaned) return { ...d, asset_name: exact, auto_mapped: true, original_name: baseOriginal ?? cleaned };
           let best: { name: string; score: number } | null = null;
           for (const k of knownNames) {
-            const s = similarity(raw, k);
+            const s = similarity(cleaned, k);
             if (!best || s > best.score) best = { name: k, score: s };
           }
-          if (best && best.score >= 0.8 && best.name !== raw) {
-            return { ...d, asset_name: best.name, auto_mapped: true, original_name: raw };
+          if (best && best.score >= 0.8 && best.name !== cleaned) {
+            return { ...d, asset_name: best.name, auto_mapped: true, original_name: baseOriginal ?? cleaned };
           }
           return d;
         });
