@@ -365,11 +365,11 @@ const PortfolioAnalysis = () => {
               </div>
 
               <Card className="p-0 overflow-hidden">
-                <div className="overflow-auto">
+                <div className="overflow-x-auto max-h-[600px] overflow-y-auto relative">
                   <Table>
-                    <TableHeader>
+                    <TableHeader className="sticky top-0 z-30 bg-background shadow-md">
                       <TableRow>
-                        <TableHead>종목명</TableHead>
+                        <TableHead className="sticky left-0 z-40 bg-background border-r border-border">종목명</TableHead>
                         <TableHead className="text-right">수량</TableHead>
                         <TableHead className="text-right">매수단가</TableHead>
                         <TableHead className="text-right">현재단가</TableHead>
@@ -385,7 +385,7 @@ const PortfolioAnalysis = () => {
                     <TableBody>
                       {view1Rows.map((r) => (
                         <TableRow key={r.id}>
-                          <TableCell className="font-medium">{r.asset_name}</TableCell>
+                          <TableCell className="font-medium sticky left-0 z-20 bg-background border-r border-border">{r.asset_name}</TableCell>
                           <TableCell className="text-right">{r.quantity.toLocaleString()}</TableCell>
                           <TableCell className="text-right">{r.avg_purchase_price.toLocaleString()}</TableCell>
                           <TableCell className="text-right">{r.current_price.toLocaleString()}</TableCell>
