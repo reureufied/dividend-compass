@@ -352,7 +352,7 @@ const PortfolioAnalysis = () => {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={weightCompareData}>
                         <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                        <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                        <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-45} textAnchor="end" height={70} />
                         <YAxis tick={{ fontSize: 11 }} unit="%" />
                         <Tooltip />
                         <Legend />
