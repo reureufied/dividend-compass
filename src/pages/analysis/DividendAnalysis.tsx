@@ -137,7 +137,6 @@ const DividendAnalysis = () => {
         subtitle="기간별 자동 그룹화"
         icon={<BarChart3 className="h-4 w-4 text-muted-foreground" />}
         preview={<MiniSparkline type="bar" data={series.map((s) => ({ value: s.amount }))} />}
-        defaultOpen
       >
         <div className="h-72">
           {series.length === 0 ? (
