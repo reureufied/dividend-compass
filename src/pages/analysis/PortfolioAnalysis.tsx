@@ -266,11 +266,11 @@ const PortfolioAnalysis = () => {
       </Card>
 
       <Tabs defaultValue="point" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="point">특정 시점 분석</TabsTrigger>
-          <TabsTrigger value="series">시계열 변동 분석</TabsTrigger>
-          <TabsTrigger value="trend">종목별 추이 보기</TabsTrigger>
-          <TabsTrigger value="manage">기록 관리</TabsTrigger>
+        <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="point">시점 분석</TabsTrigger>
+          <TabsTrigger value="series">변동 추이</TabsTrigger>
+          <TabsTrigger value="trend">종목 추이</TabsTrigger>
+          <TabsTrigger value="manage">기록</TabsTrigger>
         </TabsList>
 
         {/* ===== View 1 ===== */}
