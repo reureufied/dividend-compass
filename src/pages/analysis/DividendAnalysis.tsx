@@ -131,135 +131,105 @@ const DividendAnalysis = () => {
         </Card>
       </div>
 
-      {/* Charts */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="p-6 lg:col-span-2 shadow-elev-sm">
-          <h3 className="font-semibold mb-1">배당 추이</h3>
-          <p className="text-xs text-muted-foreground mb-4">
-            기간에 따라 월별 또는 연도별로 자동 그룹화
-          </p>
-          <div className="h-72">
-            {series.length === 0 ? (
-              <EmptyChart message={loading ? "불러오는 중…" : "데이터가 없습니다"} />
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={series} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-                  <defs>
-                    <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.95} />
-                      <stop offset="100%" stopColor="hsl(var(--primary-glow))" stopOpacity={0.7} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                  <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(v) => compactKRW(v as number)}
-                    width={56}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "hsl(var(--accent))", opacity: 0.4 }}
-                    contentStyle={{
-                      background: "hsl(var(--popover))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 12,
-                      fontSize: 12,
-                    }}
-                    formatter={(v: number) => [formatKRW(v), "배당금"]}
-                  />
-                  <Bar dataKey="amount" fill="url(#barFill)" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </Card>
-
-        <Card className="p-6 shadow-elev-sm">
-          <div className="flex items-center justify-between mb-1">
-            <h3 className="font-semibold">종목별 비중</h3>
-            <PieIcon className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <p className="text-xs text-muted-foreground mb-4">보유 종목별 분포</p>
-          <div className="h-72">
-            {byAsset.length === 0 ? (
-              <EmptyChart message={loading ? "불러오는 중…" : "데이터가 없습니다"} />
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={byAsset}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={55}
-                    outerRadius={88}
-                    paddingAngle={2}
-                    stroke="hsl(var(--card))"
-                    strokeWidth={2}
-                    label={({ percent }) =>
-                      percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : ""
-                    }
-                    labelLine={false}
-                  >
-                    {byAsset.map((_, i) => (
-                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      background: "hsl(var(--popover))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 12,
-                      fontSize: 12,
-                    }}
-                    formatter={(v: number, n) => [formatKRW(v), n as string]}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    iconType="circle"
-                    wrapperStyle={{ fontSize: 12 }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </Card>
-      </div>
-
-      {/* Top 5 */}
-      <Card className="p-6 shadow-elev-sm">
-        <div className="flex items-center gap-2 mb-4">
-          <Trophy className="h-4 w-4 text-warning" />
-          <h3 className="font-semibold">효자 종목 Top 5</h3>
+      {/* Charts — collapsible cards */}
+      <CollapsibleChartCard
+        title="배당 추이"
+        subtitle="기간별 자동 그룹화"
+        icon={<BarChart3 className="h-4 w-4 text-muted-foreground" />}
+        preview={<MiniSparkline type="bar" data={series.map((s) => ({ value: s.amount }))} />}
+        defaultOpen
+      >
+        <div className="h-72">
+          {series.length === 0 ? (
+            <EmptyChart message={loading ? "불러오는 중…" : "데이터가 없습니다"} />
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={series} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+                <defs>
+                  <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="hsl(var(--primary-glow))" stopOpacity={0.7} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => compactKRW(v as number)} width={56} domain={["dataMin", "dataMax"]} />
+                <Tooltip cursor={{ fill: "hsl(var(--accent))", opacity: 0.4 }} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} formatter={(v: number) => [formatKRW(v), "배당금"]} />
+                <Bar dataKey="amount" fill="url(#barFill)" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
+      </CollapsibleChartCard>
+
+      <CollapsibleChartCard
+        title="종목별 비중"
+        subtitle="보유 종목별 분포"
+        icon={<PieIcon className="h-4 w-4 text-muted-foreground" />}
+        preview={<MiniSparkline type="bar" data={byAsset.slice(0, 8).map((a) => ({ value: a.value }))} />}
+      >
+        <div className="h-72">
+          {byAsset.length === 0 ? (
+            <EmptyChart message={loading ? "불러오는 중…" : "데이터가 없습니다"} />
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={byAsset} dataKey="value" nameKey="name" innerRadius={55} outerRadius={88} paddingAngle={2} stroke="hsl(var(--card))" strokeWidth={2} label={({ percent }) => percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : ""} labelLine={false}>
+                  {byAsset.map((_, i) => (<Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />))}
+                </Pie>
+                <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} formatter={(v: number, n) => [formatKRW(v), n as string]} />
+                <Legend
+                  verticalAlign="bottom"
+                  align="left"
+                  layout="horizontal"
+                  iconType="circle"
+                  wrapperStyle={{ fontSize: 12, paddingTop: 8, width: "100%", overflowX: "auto" }}
+                  formatter={(value: string) => (
+                    <span className="inline-block max-w-[140px] truncate align-middle">{value}</span>
+                  )}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </CollapsibleChartCard>
+
+      <CollapsibleChartCard
+        title="효자 종목 Top 5"
+        subtitle="기간 내 누적 배당 상위"
+        icon={<Trophy className="h-4 w-4 text-warning" />}
+        preview={<MiniSparkline type="bar" data={top5.map((a) => ({ value: a.total }))} />}
+      >
         {top5.length === 0 ? (
           <p className="text-sm text-muted-foreground">선택 기간에 기록된 종목이 없습니다.</p>
         ) : (
           <ul className="space-y-3">
             {top5.map((a, i) => (
               <li key={a.name} className="flex items-center gap-4">
-                <span className="w-6 text-sm font-bold text-muted-foreground tabular-nums">
-                  {i + 1}
-                </span>
+                <span className="w-6 text-sm font-bold text-muted-foreground tabular-nums">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="font-medium truncate">{a.name}</span>
                     <span className="font-semibold tabular-nums text-sm">{formatKRW(a.total)}</span>
                   </div>
                   <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-primary rounded-full transition-all duration-500"
-                      style={{ width: `${top5Max ? (a.total / top5Max) * 100 : 0}%` }}
-                    />
+                    <div className="h-full bg-gradient-primary rounded-full transition-all duration-500" style={{ width: `${top5Max ? (a.total / top5Max) * 100 : 0}%` }} />
                   </div>
                 </div>
               </li>
             ))}
           </ul>
         )}
-      </Card>
+      </CollapsibleChartCard>
+
+      <CollapsibleChartCard
+        title="종목별 배당 성장 추이"
+        subtitle="시점별 보유 수량 기준 1주당 배당금"
+        icon={<LineIcon className="h-4 w-4 text-muted-foreground" />}
+        preview={<MiniSparkline type="line" data={series.map((s) => ({ value: s.amount }))} />}
+      >
+        <DpsTrendChart />
+      </CollapsibleChartCard>
 
       <DpsTrendChart />
     </div>
