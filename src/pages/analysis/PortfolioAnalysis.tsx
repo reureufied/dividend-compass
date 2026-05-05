@@ -503,7 +503,7 @@ const PortfolioAnalysis = () => {
                       <LineChart data={trendRows}>
                         <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                         <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} domain={["dataMin", "dataMax"]} />
                         <Tooltip />
                         <Legend />
                         <Line type="monotone" dataKey="quantity" name="수량(주)" stroke="hsl(var(--primary))" strokeWidth={2} />
@@ -518,7 +518,7 @@ const PortfolioAnalysis = () => {
                       <LineChart data={trendRows}>
                         <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                         <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 10000).toFixed(0)}만`} />
+                        <YAxis tick={{ fontSize: 11 }} domain={["dataMin", "dataMax"]} tickFormatter={(v) => `${(Number(v) / 10000).toFixed(0)}만`} />
                         <Tooltip formatter={(v: number) => formatKRW(Math.round(v))} />
                         <Legend />
                         <Line type="monotone" dataKey="principal" name="투자원금" stroke="hsl(var(--muted-foreground))" strokeWidth={2} />
