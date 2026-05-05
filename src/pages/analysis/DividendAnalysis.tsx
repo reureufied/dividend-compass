@@ -3,7 +3,7 @@ import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer,
   Tooltip, XAxis, YAxis,
 } from "recharts";
-import { Wallet, Target, TrendingUp, PieChart as PieIcon, Trophy } from "lucide-react";
+import { Wallet, Target, TrendingUp, PieChart as PieIcon, Trophy, BarChart3, LineChart as LineIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
@@ -13,6 +13,8 @@ import { Dividend } from "@/lib/dividends";
 import { filterByRange, groupForChart, sumKRW, topAssets } from "@/lib/analytics";
 import { formatKRW } from "@/lib/fx";
 import DpsTrendChart from "@/components/DpsTrendChart";
+import { CollapsibleChartCard } from "@/components/CollapsibleChartCard";
+import { MiniSparkline } from "@/components/MiniSparkline";
 
 const CHART_COLORS = [
   "hsl(var(--chart-1))",
@@ -91,173 +93,143 @@ const DividendAnalysis = () => {
       </Card>
 
       {/* KPI cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card className="p-6 shadow-elev-sm hover:shadow-elev-md transition-smooth">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-3">
+        <Card className="p-4 sm:p-6 shadow-elev-sm hover:shadow-elev-md transition-smooth">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">총 배당금 (선택 기간)</span>
+            <span className="text-xs sm:text-sm text-muted-foreground">총 배당금</span>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </div>
-          <div className="text-3xl font-bold tabular-nums">{formatKRW(total)}</div>
+          <div className="text-xl sm:text-3xl font-bold tabular-nums">{formatKRW(total)}</div>
           <p className="text-xs text-muted-foreground mt-2">
-            {filtered.length}건 · 원화 환산 기준
+            {filtered.length}건 · 원화 환산
           </p>
         </Card>
 
-        <Card className="p-6 shadow-elev-sm hover:shadow-elev-md transition-smooth">
+        <Card className="p-4 sm:p-6 shadow-elev-sm hover:shadow-elev-md transition-smooth">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">목표 달성률</span>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="text-3xl font-bold tabular-nums">{achievement.toFixed(1)}%</div>
-          <Progress value={achievement} className="mt-3 h-2" />
-          <p className="text-xs text-muted-foreground mt-2">
-            {monthlyGoal > 0
-              ? `목표 ${formatKRW(targetForRange)} (${monthsInRange}개월 환산)`
-              : "마이페이지에서 월간 목표를 설정해보세요"}
-          </p>
-        </Card>
-
-        <Card className="p-6 shadow-elev-sm hover:shadow-elev-md transition-smooth sm:col-span-2 lg:col-span-1">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">평균 월 배당</span>
+            <span className="text-xs sm:text-sm text-muted-foreground">월 평균 배당</span>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </div>
-          <div className="text-3xl font-bold tabular-nums">
+          <div className="text-xl sm:text-3xl font-bold tabular-nums">
             {formatKRW(Math.round(total / monthsInRange))}
           </div>
           <p className="text-xs text-muted-foreground mt-2">선택 기간 평균</p>
         </Card>
-      </div>
 
-      {/* Charts */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="p-6 lg:col-span-2 shadow-elev-sm">
-          <h3 className="font-semibold mb-1">배당 추이</h3>
-          <p className="text-xs text-muted-foreground mb-4">
-            기간에 따라 월별 또는 연도별로 자동 그룹화
+        <Card className="p-4 sm:p-6 shadow-elev-sm hover:shadow-elev-md transition-smooth col-span-2 lg:col-span-1">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs sm:text-sm text-muted-foreground">목표 달성률</span>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="text-xl sm:text-3xl font-bold tabular-nums">{achievement.toFixed(1)}%</div>
+          <Progress value={achievement} className="mt-3 h-2" />
+          <p className="text-xs text-muted-foreground mt-2">
+            {monthlyGoal > 0
+              ? `목표 ${formatKRW(targetForRange)} (${monthsInRange}개월)`
+              : "마이페이지에서 월간 목표를 설정해보세요"}
           </p>
-          <div className="h-72">
-            {series.length === 0 ? (
-              <EmptyChart message={loading ? "불러오는 중…" : "데이터가 없습니다"} />
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={series} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-                  <defs>
-                    <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.95} />
-                      <stop offset="100%" stopColor="hsl(var(--primary-glow))" stopOpacity={0.7} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                  <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(v) => compactKRW(v as number)}
-                    width={56}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "hsl(var(--accent))", opacity: 0.4 }}
-                    contentStyle={{
-                      background: "hsl(var(--popover))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 12,
-                      fontSize: 12,
-                    }}
-                    formatter={(v: number) => [formatKRW(v), "배당금"]}
-                  />
-                  <Bar dataKey="amount" fill="url(#barFill)" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </Card>
-
-        <Card className="p-6 shadow-elev-sm">
-          <div className="flex items-center justify-between mb-1">
-            <h3 className="font-semibold">종목별 비중</h3>
-            <PieIcon className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <p className="text-xs text-muted-foreground mb-4">보유 종목별 분포</p>
-          <div className="h-72">
-            {byAsset.length === 0 ? (
-              <EmptyChart message={loading ? "불러오는 중…" : "데이터가 없습니다"} />
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={byAsset}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={55}
-                    outerRadius={88}
-                    paddingAngle={2}
-                    stroke="hsl(var(--card))"
-                    strokeWidth={2}
-                    label={({ percent }) =>
-                      percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : ""
-                    }
-                    labelLine={false}
-                  >
-                    {byAsset.map((_, i) => (
-                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      background: "hsl(var(--popover))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 12,
-                      fontSize: 12,
-                    }}
-                    formatter={(v: number, n) => [formatKRW(v), n as string]}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    iconType="circle"
-                    wrapperStyle={{ fontSize: 12 }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </div>
         </Card>
       </div>
 
-      {/* Top 5 */}
-      <Card className="p-6 shadow-elev-sm">
-        <div className="flex items-center gap-2 mb-4">
-          <Trophy className="h-4 w-4 text-warning" />
-          <h3 className="font-semibold">효자 종목 Top 5</h3>
+      {/* Charts — collapsible cards */}
+      <CollapsibleChartCard
+        title="배당 추이"
+        subtitle="기간별 자동 그룹화"
+        icon={<BarChart3 className="h-4 w-4 text-muted-foreground" />}
+        preview={<MiniSparkline type="bar" data={series.map((s) => ({ value: s.amount }))} />}
+        defaultOpen
+      >
+        <div className="h-72">
+          {series.length === 0 ? (
+            <EmptyChart message={loading ? "불러오는 중…" : "데이터가 없습니다"} />
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={series} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+                <defs>
+                  <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="hsl(var(--primary-glow))" stopOpacity={0.7} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => compactKRW(v as number)} width={56} domain={["dataMin", "dataMax"]} />
+                <Tooltip cursor={{ fill: "hsl(var(--accent))", opacity: 0.4 }} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} formatter={(v: number) => [formatKRW(v), "배당금"]} />
+                <Bar dataKey="amount" fill="url(#barFill)" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
+      </CollapsibleChartCard>
+
+      <CollapsibleChartCard
+        title="종목별 비중"
+        subtitle="보유 종목별 분포"
+        icon={<PieIcon className="h-4 w-4 text-muted-foreground" />}
+        preview={<MiniSparkline type="bar" data={byAsset.slice(0, 8).map((a) => ({ value: a.value }))} />}
+      >
+        <div className="h-72">
+          {byAsset.length === 0 ? (
+            <EmptyChart message={loading ? "불러오는 중…" : "데이터가 없습니다"} />
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={byAsset} dataKey="value" nameKey="name" innerRadius={55} outerRadius={88} paddingAngle={2} stroke="hsl(var(--card))" strokeWidth={2} label={({ percent }) => percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : ""} labelLine={false}>
+                  {byAsset.map((_, i) => (<Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />))}
+                </Pie>
+                <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} formatter={(v: number, n) => [formatKRW(v), n as string]} />
+                <Legend
+                  verticalAlign="bottom"
+                  align="left"
+                  layout="horizontal"
+                  iconType="circle"
+                  wrapperStyle={{ fontSize: 12, paddingTop: 8, width: "100%", overflowX: "auto" }}
+                  formatter={(value: string) => (
+                    <span className="inline-block max-w-[140px] truncate align-middle">{value}</span>
+                  )}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </CollapsibleChartCard>
+
+      <CollapsibleChartCard
+        title="효자 종목 Top 5"
+        subtitle="기간 내 누적 배당 상위"
+        icon={<Trophy className="h-4 w-4 text-warning" />}
+        preview={<MiniSparkline type="bar" data={top5.map((a) => ({ value: a.total }))} />}
+      >
         {top5.length === 0 ? (
           <p className="text-sm text-muted-foreground">선택 기간에 기록된 종목이 없습니다.</p>
         ) : (
           <ul className="space-y-3">
             {top5.map((a, i) => (
               <li key={a.name} className="flex items-center gap-4">
-                <span className="w-6 text-sm font-bold text-muted-foreground tabular-nums">
-                  {i + 1}
-                </span>
+                <span className="w-6 text-sm font-bold text-muted-foreground tabular-nums">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="font-medium truncate">{a.name}</span>
                     <span className="font-semibold tabular-nums text-sm">{formatKRW(a.total)}</span>
                   </div>
                   <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-primary rounded-full transition-all duration-500"
-                      style={{ width: `${top5Max ? (a.total / top5Max) * 100 : 0}%` }}
-                    />
+                    <div className="h-full bg-gradient-primary rounded-full transition-all duration-500" style={{ width: `${top5Max ? (a.total / top5Max) * 100 : 0}%` }} />
                   </div>
                 </div>
               </li>
             ))}
           </ul>
         )}
-      </Card>
+      </CollapsibleChartCard>
+
+      <CollapsibleChartCard
+        title="종목별 배당 성장 추이"
+        subtitle="시점별 보유 수량 기준 1주당 배당금"
+        icon={<LineIcon className="h-4 w-4 text-muted-foreground" />}
+        preview={<MiniSparkline type="line" data={series.map((s) => ({ value: s.amount }))} />}
+      >
+        <DpsTrendChart />
+      </CollapsibleChartCard>
 
       <DpsTrendChart />
     </div>
