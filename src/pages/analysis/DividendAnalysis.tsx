@@ -182,9 +182,17 @@ const DividendAnalysis = () => {
                   align="left"
                   layout="horizontal"
                   iconType="circle"
-                  wrapperStyle={{ fontSize: 12, paddingTop: 8, width: "100%", overflowX: "auto" }}
-                  formatter={(value: string) => (
-                    <span className="inline-block max-w-[140px] truncate align-middle">{value}</span>
+                  content={({ payload }: any) => (
+                    <div className="overflow-x-auto pt-2">
+                      <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs min-w-max">
+                        {payload?.map((entry: any, idx: number) => (
+                          <li key={idx} className="flex items-center gap-1.5 whitespace-nowrap">
+                            <span className="inline-block h-2 w-2 rounded-full shrink-0" style={{ background: entry.color }} />
+                            <span>{entry.value}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 />
               </PieChart>
