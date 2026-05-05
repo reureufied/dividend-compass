@@ -26,6 +26,7 @@ export const PortfolioUploadCard = ({ onSaved }: Props) => {
   const [snapshotDate, setSnapshotDate] = useState<Date>(new Date());
   const [dragActive, setDragActive] = useState(false);
   const [scanPreview, setScanPreview] = useState<string | null>(null);
+  const [dateOpen, setDateOpen] = useState(false);
 
   const fileToDataUrl = (file: File) =>
     new Promise<string>((resolve, reject) => {
