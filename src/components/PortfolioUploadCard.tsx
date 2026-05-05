@@ -122,7 +122,7 @@ export const PortfolioUploadCard = ({ onSaved }: Props) => {
       <Card className="p-6 shadow-elev-sm">
         <div className="flex flex-wrap items-center gap-4 mb-4">
           <span className="text-sm font-medium">기준 날짜</span>
-          <Popover>
+          <Popover open={dateOpen} onOpenChange={setDateOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-[200px] justify-start font-normal">
                 <CalendarIcon className="mr-2 h-4 w-4" />
@@ -133,7 +133,7 @@ export const PortfolioUploadCard = ({ onSaved }: Props) => {
               <Calendar
                 mode="single"
                 selected={snapshotDate}
-                onSelect={(d) => d && setSnapshotDate(d)}
+                onSelect={(d) => { if (d) { setSnapshotDate(d); setDateOpen(false); } }}
                 initialFocus
                 className={cn("p-3 pointer-events-auto")}
               />
