@@ -20,7 +20,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
-      <Sonner />
+      <Sonner position="top-center" />
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <AuthProvider>
           <Routes>
