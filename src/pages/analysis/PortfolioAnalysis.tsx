@@ -691,7 +691,7 @@ const PortfolioAnalysis = () => {
             </p>
             <div className="grid gap-1.5">
               <Label>새 기준 날짜</Label>
-              <Popover>
+              <Popover open={editDatePopoverOpen} onOpenChange={setEditDatePopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
@@ -699,7 +699,7 @@ const PortfolioAnalysis = () => {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={editDateNew} onSelect={(d) => d && setEditDateNew(d)} initialFocus className="p-3 pointer-events-auto" />
+                  <Calendar mode="single" selected={editDateNew} onSelect={(d) => { if (d) { setEditDateNew(d); setEditDatePopoverOpen(false); } }} initialFocus className="p-3 pointer-events-auto" />
                 </PopoverContent>
               </Popover>
             </div>
