@@ -93,10 +93,22 @@ const PortfolioAnalysis = () => {
 
   useEffect(() => { loadSnaps(); /* eslint-disable-next-line */ }, [user]);
 
+  // Filter snapshots by created_at / updated_at within selected range
+  const filteredSnaps = useMemo(() => {
+    const fromMs = range.from.getTime();
+    const toMs = new Date(range.to).setHours(23, 59, 59, 999);
+    return snaps.filter((s) => {
+      const c = s.created_at ? new Date(s.created_at).getTime() : 0;
+      const u = s.updated_at ? new Date(s.updated_at).getTime() : 0;
+      const t = Math.max(c, u);
+      return t >= fromMs && t <= toMs;
+    });
+  }, [snaps, range]);
+
   // Available distinct dates (newest first)
   const distinctDates = useMemo(() => {
-    return Array.from(new Set(snaps.map((s) => s.snapshot_date))).sort((a, b) => (a < b ? 1 : -1));
-  }, [snaps]);
+    return Array.from(new Set(filteredSnaps.map((s) => s.snapshot_date))).sort((a, b) => (a < b ? 1 : -1));
+  }, [filteredSnaps]);
 
   useEffect(() => {
     if (!selectedDate && distinctDates.length > 0) setSelectedDate(distinctDates[0]);
