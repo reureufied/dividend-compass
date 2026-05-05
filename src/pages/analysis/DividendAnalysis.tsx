@@ -93,41 +93,41 @@ const DividendAnalysis = () => {
       </Card>
 
       {/* KPI cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card className="p-6 shadow-elev-sm hover:shadow-elev-md transition-smooth">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-3">
+        <Card className="p-4 sm:p-6 shadow-elev-sm hover:shadow-elev-md transition-smooth">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">총 배당금 (선택 기간)</span>
+            <span className="text-xs sm:text-sm text-muted-foreground">총 배당금</span>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </div>
-          <div className="text-3xl font-bold tabular-nums">{formatKRW(total)}</div>
+          <div className="text-xl sm:text-3xl font-bold tabular-nums">{formatKRW(total)}</div>
           <p className="text-xs text-muted-foreground mt-2">
-            {filtered.length}건 · 원화 환산 기준
+            {filtered.length}건 · 원화 환산
           </p>
         </Card>
 
-        <Card className="p-6 shadow-elev-sm hover:shadow-elev-md transition-smooth">
+        <Card className="p-4 sm:p-6 shadow-elev-sm hover:shadow-elev-md transition-smooth">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">목표 달성률</span>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="text-3xl font-bold tabular-nums">{achievement.toFixed(1)}%</div>
-          <Progress value={achievement} className="mt-3 h-2" />
-          <p className="text-xs text-muted-foreground mt-2">
-            {monthlyGoal > 0
-              ? `목표 ${formatKRW(targetForRange)} (${monthsInRange}개월 환산)`
-              : "마이페이지에서 월간 목표를 설정해보세요"}
-          </p>
-        </Card>
-
-        <Card className="p-6 shadow-elev-sm hover:shadow-elev-md transition-smooth sm:col-span-2 lg:col-span-1">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">평균 월 배당</span>
+            <span className="text-xs sm:text-sm text-muted-foreground">월 평균 배당</span>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </div>
-          <div className="text-3xl font-bold tabular-nums">
+          <div className="text-xl sm:text-3xl font-bold tabular-nums">
             {formatKRW(Math.round(total / monthsInRange))}
           </div>
           <p className="text-xs text-muted-foreground mt-2">선택 기간 평균</p>
+        </Card>
+
+        <Card className="p-4 sm:p-6 shadow-elev-sm hover:shadow-elev-md transition-smooth col-span-2 lg:col-span-1">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs sm:text-sm text-muted-foreground">목표 달성률</span>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="text-xl sm:text-3xl font-bold tabular-nums">{achievement.toFixed(1)}%</div>
+          <Progress value={achievement} className="mt-3 h-2" />
+          <p className="text-xs text-muted-foreground mt-2">
+            {monthlyGoal > 0
+              ? `목표 ${formatKRW(targetForRange)} (${monthsInRange}개월)`
+              : "마이페이지에서 월간 목표를 설정해보세요"}
+          </p>
         </Card>
       </div>
 
