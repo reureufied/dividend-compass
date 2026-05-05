@@ -589,34 +589,36 @@ const PortfolioAnalysis = () => {
                   날짜 {trendSortAsc ? "오름차순 ↑" : "내림차순 ↓"}
                 </Button>
               </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>날짜</TableHead>
-                    <TableHead className="text-right">수량</TableHead>
-                    <TableHead className="text-right">매수단가</TableHead>
-                    <TableHead className="text-right">현재단가</TableHead>
-                    <TableHead className="text-right">투자원금</TableHead>
-                    <TableHead className="text-right">평가금액</TableHead>
-                    <TableHead className="text-right">손익금</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {trendTableRows.map((r) => (
-                    <TableRow key={r.date}>
-                      <TableCell className="font-medium">{r.date}</TableCell>
-                      <TableCell className="text-right">{r.quantity.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">{r.avg_purchase_price.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">{r.current_price.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">{formatKRW(Math.round(r.principal))}</TableCell>
-                      <TableCell className="text-right">{formatKRW(Math.round(r.value))}</TableCell>
-                      <TableCell className={cn("text-right font-medium", r.pnl >= 0 ? "text-emerald-500" : "text-destructive")}>
-                        {r.pnl >= 0 ? "+" : ""}{formatKRW(Math.round(r.pnl))}
-                      </TableCell>
+              <div className="overflow-x-auto max-h-[600px] overflow-y-auto relative">
+                <Table>
+                  <TableHeader className="sticky top-0 z-30 bg-background shadow-md">
+                    <TableRow>
+                      <TableHead className="sticky left-0 z-40 bg-background border-r border-border">날짜</TableHead>
+                      <TableHead className="text-right">수량</TableHead>
+                      <TableHead className="text-right">매수단가</TableHead>
+                      <TableHead className="text-right">현재단가</TableHead>
+                      <TableHead className="text-right">투자원금</TableHead>
+                      <TableHead className="text-right">평가금액</TableHead>
+                      <TableHead className="text-right">손익금</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {trendTableRows.map((r) => (
+                      <TableRow key={r.date}>
+                        <TableCell className="font-medium sticky left-0 z-20 bg-background border-r border-border">{r.date}</TableCell>
+                        <TableCell className="text-right">{r.quantity.toLocaleString()}</TableCell>
+                        <TableCell className="text-right">{r.avg_purchase_price.toLocaleString()}</TableCell>
+                        <TableCell className="text-right">{r.current_price.toLocaleString()}</TableCell>
+                        <TableCell className="text-right">{formatKRW(Math.round(r.principal))}</TableCell>
+                        <TableCell className="text-right">{formatKRW(Math.round(r.value))}</TableCell>
+                        <TableCell className={cn("text-right font-medium", r.pnl >= 0 ? "text-emerald-500" : "text-destructive")}>
+                          {r.pnl >= 0 ? "+" : ""}{formatKRW(Math.round(r.pnl))}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </Card>
           )}
         </TabsContent>
