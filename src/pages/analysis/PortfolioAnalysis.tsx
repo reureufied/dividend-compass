@@ -400,21 +400,6 @@ const PortfolioAnalysis = () => {
 
         {/* ===== View 2 ===== */}
         <TabsContent value="series" className="space-y-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm font-medium">기간</span>
-            <Select value={String(periodMonths)} onValueChange={(v) => setPeriodMonths(Number(v))}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="3">최근 3개월</SelectItem>
-                <SelectItem value="6">최근 6개월</SelectItem>
-                <SelectItem value="12">최근 1년</SelectItem>
-                <SelectItem value="24">최근 2년</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
           <Card className="p-5">
             <h3 className="font-semibold mb-3">총 투자원금 vs 평가금액 추이</h3>
             <div className="h-[320px]">
@@ -427,7 +412,7 @@ const PortfolioAnalysis = () => {
                   <LineChart data={seriesData}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                     <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 10000).toFixed(0)}만`} />
+                    <YAxis tick={{ fontSize: 11 }} domain={["dataMin", "dataMax"]} tickFormatter={(v) => `${(Number(v) / 10000).toFixed(0)}만`} />
                     <Tooltip formatter={(v: number) => formatKRW(Math.round(v))} />
                     <Legend />
                     <Line type="monotone" dataKey="principal" name="투자원금" stroke="hsl(var(--muted-foreground))" strokeWidth={2} />
@@ -440,8 +425,8 @@ const PortfolioAnalysis = () => {
 
           <Card className="p-5">
             <div className="flex flex-wrap items-center gap-3 mb-4">
-              <h3 className="font-semibold">종목별 변동량</h3>
-              <Select value={focusAsset} onValueChange={setFocusAsset}>
+              <h3 className="font-semibold">종목별 추이</h3>
+              <Select value={trendAsset} onValueChange={setTrendAsset}>
                 <SelectTrigger className="w-[220px]">
                   <SelectValue placeholder="종목 선택" />
                 </SelectTrigger>
@@ -450,54 +435,44 @@ const PortfolioAnalysis = () => {
                 </SelectContent>
               </Select>
             </div>
-
-            {!focusAsset ? (
-              <p className="text-sm text-muted-foreground">종목을 선택하면 기록 간 수량·투자원금 변동을 보여드려요.</p>
-            ) : !assetDiffs || assetDiffs.length === 0 ? (
+            {!trendAsset ? (
+              <p className="text-sm text-muted-foreground">종목을 선택하면 전체 기간의 수량·평가금액·투자원금 추이를 보여드려요.</p>
+            ) : trendRows.length === 0 ? (
               <p className="text-sm text-muted-foreground">해당 종목의 기록이 없어요.</p>
             ) : (
-              <>
-                <div className="h-[260px] mb-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={assetDiffs}>
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                      <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                      <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
-                      <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 10000).toFixed(0)}만`} />
-                      <Tooltip />
-                      <Legend />
-                      <Bar yAxisId="left" dataKey="qtyDiff" name="수량 변동(주)" fill="hsl(var(--accent-foreground))" radius={[6, 6, 0, 0]} />
-                      <Bar yAxisId="right" dataKey="principalDiff" name="투자금 변동(KRW)" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div>
+                  <h4 className="font-medium text-sm mb-2">수량 변동 추이</h4>
+                  <div className="h-[280px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={trendRows}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} domain={["dataMin", "dataMax"]} />
+                        <Tooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="quantity" name="수량(주)" stroke="hsl(var(--primary))" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>날짜</TableHead>
-                      <TableHead className="text-right">수량</TableHead>
-                      <TableHead className="text-right">수량 변동</TableHead>
-                      <TableHead className="text-right">투자원금</TableHead>
-                      <TableHead className="text-right">투자금 변동</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {assetDiffs.map((d) => (
-                      <TableRow key={d.date}>
-                        <TableCell>{d.date}</TableCell>
-                        <TableCell className="text-right">{d.quantity.toLocaleString()}</TableCell>
-                        <TableCell className={cn("text-right", d.qtyDiff > 0 ? "text-emerald-500" : d.qtyDiff < 0 ? "text-destructive" : "text-muted-foreground")}>
-                          {d.qtyDiff > 0 ? "+" : ""}{d.qtyDiff.toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right">{formatKRW(Math.round(d.principal))}</TableCell>
-                        <TableCell className={cn("text-right", d.principalDiff > 0 ? "text-emerald-500" : d.principalDiff < 0 ? "text-destructive" : "text-muted-foreground")}>
-                          {d.principalDiff > 0 ? "+" : ""}{formatKRW(Math.round(d.principalDiff))}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </>
+                <div>
+                  <h4 className="font-medium text-sm mb-2">평가금액 vs 투자원금 추이</h4>
+                  <div className="h-[280px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={trendRows}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} domain={["dataMin", "dataMax"]} tickFormatter={(v) => `${(Number(v) / 10000).toFixed(0)}만`} />
+                        <Tooltip formatter={(v: number) => formatKRW(Math.round(v))} />
+                        <Legend />
+                        <Line type="monotone" dataKey="principal" name="투자원금" stroke="hsl(var(--muted-foreground))" strokeWidth={2} />
+                        <Line type="monotone" dataKey="value" name="평가금액" stroke="hsl(var(--primary))" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
             )}
           </Card>
         </TabsContent>
