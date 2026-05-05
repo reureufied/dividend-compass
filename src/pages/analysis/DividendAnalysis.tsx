@@ -165,7 +165,7 @@ const DividendAnalysis = () => {
         title="종목별 비중"
         subtitle="보유 종목별 분포"
         icon={<PieIcon className="h-4 w-4 text-muted-foreground" />}
-        preview={<MiniSparkline type="bar" data={byAsset.slice(0, 8).map((a) => ({ value: a.value }))} />}
+        preview={<MiniSparkline type="pie" data={byAsset.slice(0, 6).map((a) => ({ value: a.value, name: a.name }))} />}
       >
         <div className="h-72">
           {byAsset.length === 0 ? (
