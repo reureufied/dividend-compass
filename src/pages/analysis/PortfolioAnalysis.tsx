@@ -146,42 +146,19 @@ const PortfolioAnalysis = () => {
     [view1Rows]
   );
 
-  // ====== View 2 calculations (time-series) ======
+  // ====== View 2 calculations (time-series) — uses top-level range ======
   const seriesData = useMemo(() => {
-    const cutoff = subMonths(new Date(), periodMonths);
     const byDate = new Map<string, { date: string; principal: number; value: number }>();
     filteredSnaps.forEach((s) => {
-      if (new Date(s.snapshot_date) < cutoff) return;
       const cur = byDate.get(s.snapshot_date) ?? { date: s.snapshot_date, principal: 0, value: 0 };
       cur.principal += s.quantity * s.avg_purchase_price;
       cur.value += s.quantity * s.current_price;
       byDate.set(s.snapshot_date, cur);
     });
     return Array.from(byDate.values()).sort((a, b) => (a.date < b.date ? -1 : 1));
-  }, [filteredSnaps, periodMonths]);
+  }, [filteredSnaps]);
 
   const allAssets = useMemo(() => Array.from(new Set(filteredSnaps.map((s) => s.asset_name))).sort(), [filteredSnaps]);
-
-  const assetDiffs = useMemo(() => {
-    if (!focusAsset) return null;
-    const cutoff = subMonths(new Date(), periodMonths);
-    const rows = filteredSnaps
-      .filter((s) => s.asset_name === focusAsset && new Date(s.snapshot_date) >= cutoff)
-      .sort((a, b) => (a.snapshot_date < b.snapshot_date ? -1 : 1));
-    const diffs = rows.map((cur, i) => {
-      const prev = i > 0 ? rows[i - 1] : null;
-      const principal = cur.quantity * cur.avg_purchase_price;
-      const prevPrincipal = prev ? prev.quantity * prev.avg_purchase_price : 0;
-      return {
-        date: cur.snapshot_date,
-        quantity: cur.quantity,
-        qtyDiff: prev ? cur.quantity - prev.quantity : 0,
-        principal,
-        principalDiff: prev ? principal - prevPrincipal : 0,
-      };
-    });
-    return diffs;
-  }, [filteredSnaps, focusAsset, periodMonths]);
 
   // ====== View 3: asset-centric trend (all-time) ======
   const trendRows = useMemo(() => {
