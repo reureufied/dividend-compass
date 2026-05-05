@@ -165,7 +165,7 @@ const PortfolioAnalysis = () => {
   const assetDiffs = useMemo(() => {
     if (!focusAsset) return null;
     const cutoff = subMonths(new Date(), periodMonths);
-    const rows = snaps
+    const rows = filteredSnaps
       .filter((s) => s.asset_name === focusAsset && new Date(s.snapshot_date) >= cutoff)
       .sort((a, b) => (a.snapshot_date < b.snapshot_date ? -1 : 1));
     const diffs = rows.map((cur, i) => {
@@ -186,7 +186,7 @@ const PortfolioAnalysis = () => {
   // ====== View 3: asset-centric trend (all-time) ======
   const trendRows = useMemo(() => {
     if (!trendAsset) return [];
-    const rows = snaps
+    const rows = filteredSnaps
       .filter((s) => s.asset_name === trendAsset)
       .map((s) => {
         const principal = s.quantity * s.avg_purchase_price;
@@ -634,7 +634,7 @@ const PortfolioAnalysis = () => {
                 </TableHeader>
                 <TableBody>
                   {distinctDates.map((d) => {
-                    const rows = snaps.filter((s) => s.snapshot_date === d);
+                    const rows = filteredSnaps.filter((s) => s.snapshot_date === d);
                     const value = rows.reduce((a, b) => a + b.quantity * b.current_price, 0);
                     return (
                       <TableRow key={d}>
