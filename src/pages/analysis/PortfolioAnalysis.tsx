@@ -56,8 +56,7 @@ const PortfolioAnalysis = () => {
   const { user } = useAuth();
   const [snaps, setSnaps] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
-
-
+  const [range, setRange] = useState<DateRange>(computeRange("3m"));
   // View 1: selected date
   const [selectedDate, setSelectedDate] = useState<string>("");
   // View 2: time series
