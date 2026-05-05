@@ -152,7 +152,7 @@ const DividendAnalysis = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => compactKRW(v as number)} width={56} domain={["dataMin", "dataMax"]} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => compactKRW(v as number)} width={56} domain={[0, "auto"]} />
                 <Tooltip cursor={{ fill: "hsl(var(--accent))", opacity: 0.4 }} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} formatter={(v: number) => [formatKRW(v), "배당금"]} />
                 <Bar dataKey="amount" fill="url(#barFill)" radius={[8, 8, 0, 0]} />
               </BarChart>
