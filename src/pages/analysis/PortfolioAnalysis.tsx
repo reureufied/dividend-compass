@@ -71,6 +71,7 @@ const PortfolioAnalysis = () => {
   const [deleteDateTarget, setDeleteDateTarget] = useState<string | null>(null);
   const [editDateTarget, setEditDateTarget] = useState<string | null>(null);
   const [editDateNew, setEditDateNew] = useState<Date>(new Date());
+  const [editDatePopoverOpen, setEditDatePopoverOpen] = useState(false);
   const [dateOpsLoading, setDateOpsLoading] = useState(false);
 
   useEffect(() => {
@@ -310,12 +311,29 @@ const PortfolioAnalysis = () => {
                           data={view1Rows.map((r) => ({ name: r.asset_name, value: Number(r.value.toFixed(0)) }))}
                           dataKey="value"
                           nameKey="name"
-                          outerRadius={100}
-                          label={(e: any) => `${e.name} ${e.percent ? (e.percent * 100).toFixed(1) : 0}%`}
+                          outerRadius={90}
+                          label={(e: any) => (e.percent && e.percent > 0.04 ? `${(e.percent * 100).toFixed(0)}%` : "")}
+                          labelLine={false}
                         >
                           {view1Rows.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                         </Pie>
                         <Tooltip formatter={(v: number) => formatKRW(v)} />
+                        <Legend
+                          verticalAlign="bottom"
+                          align="left"
+                          content={({ payload }: any) => (
+                            <div className="overflow-x-auto pt-2">
+                              <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs min-w-max">
+                                {payload?.map((entry: any, idx: number) => (
+                                  <li key={idx} className="flex items-center gap-1.5 whitespace-nowrap">
+                                    <span className="inline-block h-2 w-2 rounded-full shrink-0" style={{ background: entry.color }} />
+                                    <span>{entry.value}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -674,7 +692,7 @@ const PortfolioAnalysis = () => {
             </p>
             <div className="grid gap-1.5">
               <Label>새 기준 날짜</Label>
-              <Popover>
+              <Popover open={editDatePopoverOpen} onOpenChange={setEditDatePopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
@@ -682,7 +700,7 @@ const PortfolioAnalysis = () => {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={editDateNew} onSelect={(d) => d && setEditDateNew(d)} initialFocus className="p-3 pointer-events-auto" />
+                  <Calendar mode="single" selected={editDateNew} onSelect={(d) => { if (d) { setEditDateNew(d); setEditDatePopoverOpen(false); } }} initialFocus className="p-3 pointer-events-auto" />
                 </PopoverContent>
               </Popover>
             </div>

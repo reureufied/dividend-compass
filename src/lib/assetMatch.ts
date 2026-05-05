@@ -1,7 +1,22 @@
 // Utilities for fuzzy matching asset names (space-insensitive, case-insensitive)
 
+/**
+ * Normalize OCR'd asset names: replace verbose Korean ETF suffixes with "ETF".
+ * Handles variations with spaces, punctuation, e.g. "증권상장지수투자신탁",
+ * "증권 상장 지수 투자 신탁", with optional trailing 제N호/주식형/혼합형 etc.
+ */
+export const cleanAssetName = (s: string): string => {
+  if (!s) return s;
+  let out = s
+    // remove spaces between the 6 chars of 증권상장지수투자신탁
+    .replace(/증\s*권\s*상\s*장\s*지\s*수\s*투\s*자\s*신\s*탁/g, "ETF");
+  // strip trailing fund-class noise like "제1호", "(주식)", "(주식-파생형)"
+  out = out.replace(/\s*제\s*\d+\s*호/g, "");
+  return out.replace(/\s{2,}/g, " ").trim();
+};
+
 export const normalizeAsset = (s: string): string =>
-  (s ?? "").toLowerCase().replace(/\s+/g, "").trim();
+  cleanAssetName(s ?? "").toLowerCase().replace(/\s+/g, "").trim();
 
 // Known Korean asset-management issuer prefixes that often appear before the brand
 const ISSUER_PREFIXES = [

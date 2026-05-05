@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { HoldingDraft, PortfolioBulkReview, toHoldingDraft } from "@/components/PortfolioBulkReview";
 import { useKnownAssetNames } from "@/hooks/useKnownAssetNames";
-import { normalizeAsset, similarity } from "@/lib/assetMatch";
+import { cleanAssetName, normalizeAsset, similarity } from "@/lib/assetMatch";
 
 interface Props {
   onSaved: () => void;
@@ -26,6 +26,7 @@ export const PortfolioUploadCard = ({ onSaved }: Props) => {
   const [snapshotDate, setSnapshotDate] = useState<Date>(new Date());
   const [dragActive, setDragActive] = useState(false);
   const [scanPreview, setScanPreview] = useState<string | null>(null);
+  const [dateOpen, setDateOpen] = useState(false);
 
   const fileToDataUrl = (file: File) =>
     new Promise<string>((resolve, reject) => {
@@ -59,18 +60,21 @@ export const PortfolioUploadCard = ({ onSaved }: Props) => {
       const results = payload?.results;
       if (Array.isArray(results) && results.length > 0) {
         const drafts: HoldingDraft[] = results.map(toHoldingDraft).map((d) => {
-          const raw = d.asset_name?.trim();
-          if (!raw) return d;
-          const nraw = normalizeAsset(raw);
-          const exact = knownNames.find((k) => normalizeAsset(k) === nraw);
-          if (exact && exact !== raw) return { ...d, asset_name: exact, auto_mapped: true, original_name: raw };
+          const original = d.asset_name?.trim() ?? "";
+          const cleaned = cleanAssetName(original);
+          if (!cleaned) return d;
+          const baseOriginal = cleaned !== original ? original : undefined;
+          d = { ...d, asset_name: cleaned, ...(baseOriginal ? { auto_mapped: true, original_name: baseOriginal } : {}) };
+          const ncleaned = normalizeAsset(cleaned);
+          const exact = knownNames.find((k) => normalizeAsset(k) === ncleaned);
+          if (exact && exact !== cleaned) return { ...d, asset_name: exact, auto_mapped: true, original_name: baseOriginal ?? cleaned };
           let best: { name: string; score: number } | null = null;
           for (const k of knownNames) {
-            const s = similarity(raw, k);
+            const s = similarity(cleaned, k);
             if (!best || s > best.score) best = { name: k, score: s };
           }
-          if (best && best.score >= 0.8 && best.name !== raw) {
-            return { ...d, asset_name: best.name, auto_mapped: true, original_name: raw };
+          if (best && best.score >= 0.8 && best.name !== cleaned) {
+            return { ...d, asset_name: best.name, auto_mapped: true, original_name: baseOriginal ?? cleaned };
           }
           return d;
         });
@@ -122,7 +126,7 @@ export const PortfolioUploadCard = ({ onSaved }: Props) => {
       <Card className="p-6 shadow-elev-sm">
         <div className="flex flex-wrap items-center gap-4 mb-4">
           <span className="text-sm font-medium">기준 날짜</span>
-          <Popover>
+          <Popover open={dateOpen} onOpenChange={setDateOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-[200px] justify-start font-normal">
                 <CalendarIcon className="mr-2 h-4 w-4" />
@@ -133,7 +137,7 @@ export const PortfolioUploadCard = ({ onSaved }: Props) => {
               <Calendar
                 mode="single"
                 selected={snapshotDate}
-                onSelect={(d) => d && setSnapshotDate(d)}
+                onSelect={(d) => { if (d) { setSnapshotDate(d); setDateOpen(false); } }}
                 initialFocus
                 className={cn("p-3 pointer-events-auto")}
               />
@@ -189,9 +193,9 @@ export const PortfolioUploadCard = ({ onSaved }: Props) => {
                     e.target.value = "";
                   }}
                 />
-                <Button type="button" onClick={() => fileInputRef.current?.click()} disabled={scanning} className="bg-gradient-primary hover:opacity-90">
-                  {scanning ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ImagePlus className="h-4 w-4 mr-2" />}
-                  {scanning ? "AI가 자산 내역을 읽고 있어요… 🔍" : "스크린샷 업로드"}
+                <Button type="button" onClick={() => fileInputRef.current?.click()} disabled={scanning} className="bg-gradient-primary hover:opacity-90 max-w-full whitespace-normal text-left h-auto py-2">
+                  {scanning ? <Loader2 className="h-4 w-4 mr-2 animate-spin shrink-0" /> : <ImagePlus className="h-4 w-4 mr-2 shrink-0" />}
+                  <span className="truncate">{scanning ? "AI가 자산 내역을 읽고 있어요… 🔍" : "스크린샷 업로드"}</span>
                 </Button>
                 <Button type="button" variant="outline" onClick={addEmptyRow}>
                   <Plus className="h-4 w-4 mr-2" /> 직접 입력

@@ -137,7 +137,6 @@ const DividendAnalysis = () => {
         subtitle="기간별 자동 그룹화"
         icon={<BarChart3 className="h-4 w-4 text-muted-foreground" />}
         preview={<MiniSparkline type="bar" data={series.map((s) => ({ value: s.amount }))} />}
-        defaultOpen
       >
         <div className="h-72">
           {series.length === 0 ? (
@@ -166,7 +165,7 @@ const DividendAnalysis = () => {
         title="종목별 비중"
         subtitle="보유 종목별 분포"
         icon={<PieIcon className="h-4 w-4 text-muted-foreground" />}
-        preview={<MiniSparkline type="bar" data={byAsset.slice(0, 8).map((a) => ({ value: a.value }))} />}
+        preview={<MiniSparkline type="pie" data={byAsset.slice(0, 6).map((a) => ({ value: a.value, name: a.name }))} />}
       >
         <div className="h-72">
           {byAsset.length === 0 ? (
@@ -183,9 +182,17 @@ const DividendAnalysis = () => {
                   align="left"
                   layout="horizontal"
                   iconType="circle"
-                  wrapperStyle={{ fontSize: 12, paddingTop: 8, width: "100%", overflowX: "auto" }}
-                  formatter={(value: string) => (
-                    <span className="inline-block max-w-[140px] truncate align-middle">{value}</span>
+                  content={({ payload }: any) => (
+                    <div className="overflow-x-auto pt-2">
+                      <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs min-w-max">
+                        {payload?.map((entry: any, idx: number) => (
+                          <li key={idx} className="flex items-center gap-1.5 whitespace-nowrap">
+                            <span className="inline-block h-2 w-2 rounded-full shrink-0" style={{ background: entry.color }} />
+                            <span>{entry.value}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 />
               </PieChart>
@@ -230,8 +237,6 @@ const DividendAnalysis = () => {
       >
         <DpsTrendChart />
       </CollapsibleChartCard>
-
-      <DpsTrendChart />
     </div>
   );
 };
