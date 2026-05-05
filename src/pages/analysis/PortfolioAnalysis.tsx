@@ -116,7 +116,7 @@ const PortfolioAnalysis = () => {
 
   // ====== View 1 calculations ======
   const view1Rows = useMemo(() => {
-    const rows = snaps.filter((s) => s.snapshot_date === selectedDate);
+    const rows = filteredSnaps.filter((s) => s.snapshot_date === selectedDate);
     const enriched = rows.map((s) => {
       const principal = s.quantity * s.avg_purchase_price;
       const value = s.quantity * s.current_price;
@@ -128,7 +128,7 @@ const PortfolioAnalysis = () => {
     return enriched
       .map((e) => ({ ...e, currentWeight: totalValue > 0 ? (e.value / totalValue) * 100 : 0 }))
       .sort((a, b) => b.value - a.value);
-  }, [snaps, selectedDate]);
+  }, [filteredSnaps, selectedDate]);
 
   const view1Totals = useMemo(() => {
     const principal = view1Rows.reduce((a, b) => a + b.principal, 0);
@@ -150,7 +150,7 @@ const PortfolioAnalysis = () => {
   const seriesData = useMemo(() => {
     const cutoff = subMonths(new Date(), periodMonths);
     const byDate = new Map<string, { date: string; principal: number; value: number }>();
-    snaps.forEach((s) => {
+    filteredSnaps.forEach((s) => {
       if (new Date(s.snapshot_date) < cutoff) return;
       const cur = byDate.get(s.snapshot_date) ?? { date: s.snapshot_date, principal: 0, value: 0 };
       cur.principal += s.quantity * s.avg_purchase_price;
@@ -158,9 +158,9 @@ const PortfolioAnalysis = () => {
       byDate.set(s.snapshot_date, cur);
     });
     return Array.from(byDate.values()).sort((a, b) => (a.date < b.date ? -1 : 1));
-  }, [snaps, periodMonths]);
+  }, [filteredSnaps, periodMonths]);
 
-  const allAssets = useMemo(() => Array.from(new Set(snaps.map((s) => s.asset_name))).sort(), [snaps]);
+  const allAssets = useMemo(() => Array.from(new Set(filteredSnaps.map((s) => s.asset_name))).sort(), [filteredSnaps]);
 
   const assetDiffs = useMemo(() => {
     if (!focusAsset) return null;
@@ -181,7 +181,7 @@ const PortfolioAnalysis = () => {
       };
     });
     return diffs;
-  }, [snaps, focusAsset, periodMonths]);
+  }, [filteredSnaps, focusAsset, periodMonths]);
 
   // ====== View 3: asset-centric trend (all-time) ======
   const trendRows = useMemo(() => {
@@ -203,7 +203,7 @@ const PortfolioAnalysis = () => {
       })
       .sort((a, b) => (a.date < b.date ? -1 : 1));
     return rows;
-  }, [snaps, trendAsset]);
+  }, [filteredSnaps, trendAsset]);
 
   const trendTableRows = useMemo(() => {
     const arr = [...trendRows];
