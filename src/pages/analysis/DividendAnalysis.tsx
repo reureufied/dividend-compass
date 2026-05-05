@@ -237,8 +237,6 @@ const DividendAnalysis = () => {
       >
         <DpsTrendChart />
       </CollapsibleChartCard>
-
-      <DpsTrendChart />
     </div>
   );
 };
