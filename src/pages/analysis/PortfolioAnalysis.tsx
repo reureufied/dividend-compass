@@ -19,6 +19,7 @@ import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DateFilterBar, DateRange, computeRange } from "@/components/DateFilterBar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,8 @@ interface Snapshot {
   avg_purchase_price: number;
   current_price: number;
   target_weight: number;
+  created_at: string;
+  updated_at: string;
 }
 
 const COLORS = [
@@ -53,8 +56,7 @@ const PortfolioAnalysis = () => {
   const { user } = useAuth();
   const [snaps, setSnaps] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
-
-
+  const [range, setRange] = useState<DateRange>(computeRange("3m"));
   // View 1: selected date
   const [selectedDate, setSelectedDate] = useState<string>("");
   // View 2: time series
@@ -91,10 +93,22 @@ const PortfolioAnalysis = () => {
 
   useEffect(() => { loadSnaps(); /* eslint-disable-next-line */ }, [user]);
 
+  // Filter snapshots by created_at / updated_at within selected range
+  const filteredSnaps = useMemo(() => {
+    const fromMs = range.from.getTime();
+    const toMs = new Date(range.to).setHours(23, 59, 59, 999);
+    return snaps.filter((s) => {
+      const c = s.created_at ? new Date(s.created_at).getTime() : 0;
+      const u = s.updated_at ? new Date(s.updated_at).getTime() : 0;
+      const t = Math.max(c, u);
+      return t >= fromMs && t <= toMs;
+    });
+  }, [snaps, range]);
+
   // Available distinct dates (newest first)
   const distinctDates = useMemo(() => {
-    return Array.from(new Set(snaps.map((s) => s.snapshot_date))).sort((a, b) => (a < b ? 1 : -1));
-  }, [snaps]);
+    return Array.from(new Set(filteredSnaps.map((s) => s.snapshot_date))).sort((a, b) => (a < b ? 1 : -1));
+  }, [filteredSnaps]);
 
   useEffect(() => {
     if (!selectedDate && distinctDates.length > 0) setSelectedDate(distinctDates[0]);
@@ -102,7 +116,7 @@ const PortfolioAnalysis = () => {
 
   // ====== View 1 calculations ======
   const view1Rows = useMemo(() => {
-    const rows = snaps.filter((s) => s.snapshot_date === selectedDate);
+    const rows = filteredSnaps.filter((s) => s.snapshot_date === selectedDate);
     const enriched = rows.map((s) => {
       const principal = s.quantity * s.avg_purchase_price;
       const value = s.quantity * s.current_price;
@@ -114,7 +128,7 @@ const PortfolioAnalysis = () => {
     return enriched
       .map((e) => ({ ...e, currentWeight: totalValue > 0 ? (e.value / totalValue) * 100 : 0 }))
       .sort((a, b) => b.value - a.value);
-  }, [snaps, selectedDate]);
+  }, [filteredSnaps, selectedDate]);
 
   const view1Totals = useMemo(() => {
     const principal = view1Rows.reduce((a, b) => a + b.principal, 0);
@@ -136,7 +150,7 @@ const PortfolioAnalysis = () => {
   const seriesData = useMemo(() => {
     const cutoff = subMonths(new Date(), periodMonths);
     const byDate = new Map<string, { date: string; principal: number; value: number }>();
-    snaps.forEach((s) => {
+    filteredSnaps.forEach((s) => {
       if (new Date(s.snapshot_date) < cutoff) return;
       const cur = byDate.get(s.snapshot_date) ?? { date: s.snapshot_date, principal: 0, value: 0 };
       cur.principal += s.quantity * s.avg_purchase_price;
@@ -144,14 +158,14 @@ const PortfolioAnalysis = () => {
       byDate.set(s.snapshot_date, cur);
     });
     return Array.from(byDate.values()).sort((a, b) => (a.date < b.date ? -1 : 1));
-  }, [snaps, periodMonths]);
+  }, [filteredSnaps, periodMonths]);
 
-  const allAssets = useMemo(() => Array.from(new Set(snaps.map((s) => s.asset_name))).sort(), [snaps]);
+  const allAssets = useMemo(() => Array.from(new Set(filteredSnaps.map((s) => s.asset_name))).sort(), [filteredSnaps]);
 
   const assetDiffs = useMemo(() => {
     if (!focusAsset) return null;
     const cutoff = subMonths(new Date(), periodMonths);
-    const rows = snaps
+    const rows = filteredSnaps
       .filter((s) => s.asset_name === focusAsset && new Date(s.snapshot_date) >= cutoff)
       .sort((a, b) => (a.snapshot_date < b.snapshot_date ? -1 : 1));
     const diffs = rows.map((cur, i) => {
@@ -167,12 +181,12 @@ const PortfolioAnalysis = () => {
       };
     });
     return diffs;
-  }, [snaps, focusAsset, periodMonths]);
+  }, [filteredSnaps, focusAsset, periodMonths]);
 
   // ====== View 3: asset-centric trend (all-time) ======
   const trendRows = useMemo(() => {
     if (!trendAsset) return [];
-    const rows = snaps
+    const rows = filteredSnaps
       .filter((s) => s.asset_name === trendAsset)
       .map((s) => {
         const principal = s.quantity * s.avg_purchase_price;
@@ -189,7 +203,7 @@ const PortfolioAnalysis = () => {
       })
       .sort((a, b) => (a.date < b.date ? -1 : 1));
     return rows;
-  }, [snaps, trendAsset]);
+  }, [filteredSnaps, trendAsset]);
 
   const trendTableRows = useMemo(() => {
     const arr = [...trendRows];
@@ -246,6 +260,10 @@ const PortfolioAnalysis = () => {
           월별 자산 기록을 기록하고, 비중·수익률·시계열 변동을 분석하세요.
         </p>
       </div>
+
+      <Card className="p-4 shadow-elev-sm animate-fade-in">
+        <DateFilterBar value={range} onChange={setRange} />
+      </Card>
 
       <Tabs defaultValue="point" className="space-y-4">
         <TabsList>
@@ -620,7 +638,7 @@ const PortfolioAnalysis = () => {
                 </TableHeader>
                 <TableBody>
                   {distinctDates.map((d) => {
-                    const rows = snaps.filter((s) => s.snapshot_date === d);
+                    const rows = filteredSnaps.filter((s) => s.snapshot_date === d);
                     const value = rows.reduce((a, b) => a + b.quantity * b.current_price, 0);
                     return (
                       <TableRow key={d}>
