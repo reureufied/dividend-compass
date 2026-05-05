@@ -3,7 +3,7 @@ import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer,
   Tooltip, XAxis, YAxis,
 } from "recharts";
-import { Wallet, Target, TrendingUp, PieChart as PieIcon, Trophy } from "lucide-react";
+import { Wallet, Target, TrendingUp, PieChart as PieIcon, Trophy, BarChart3, LineChart as LineIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
@@ -13,6 +13,8 @@ import { Dividend } from "@/lib/dividends";
 import { filterByRange, groupForChart, sumKRW, topAssets } from "@/lib/analytics";
 import { formatKRW } from "@/lib/fx";
 import DpsTrendChart from "@/components/DpsTrendChart";
+import { CollapsibleChartCard } from "@/components/CollapsibleChartCard";
+import { MiniSparkline } from "@/components/MiniSparkline";
 
 const CHART_COLORS = [
   "hsl(var(--chart-1))",
