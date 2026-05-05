@@ -190,9 +190,9 @@ export const PortfolioUploadCard = ({ onSaved }: Props) => {
                     e.target.value = "";
                   }}
                 />
-                <Button type="button" onClick={() => fileInputRef.current?.click()} disabled={scanning} className="bg-gradient-primary hover:opacity-90">
-                  {scanning ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ImagePlus className="h-4 w-4 mr-2" />}
-                  {scanning ? "AI가 자산 내역을 읽고 있어요… 🔍" : "스크린샷 업로드"}
+                <Button type="button" onClick={() => fileInputRef.current?.click()} disabled={scanning} className="bg-gradient-primary hover:opacity-90 max-w-full whitespace-normal text-left h-auto py-2">
+                  {scanning ? <Loader2 className="h-4 w-4 mr-2 animate-spin shrink-0" /> : <ImagePlus className="h-4 w-4 mr-2 shrink-0" />}
+                  <span className="truncate">{scanning ? "AI가 자산 내역을 읽고 있어요… 🔍" : "스크린샷 업로드"}</span>
                 </Button>
                 <Button type="button" variant="outline" onClick={addEmptyRow}>
                   <Plus className="h-4 w-4 mr-2" /> 직접 입력
