@@ -19,11 +19,15 @@ import {
 import { toast } from "sonner";
 import { Dividend } from "@/lib/dividends";
 import { useDisplayName } from "@/hooks/useDisplayName";
+import { Pencil, Check, X, Lock } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 // 하부 관리 부품들 임포트
 import { AssetMergeManager } from "@/components/AssetMergeManager";
 import { AssetHistoryManager } from "@/components/AssetHistoryManager";
 import { DividendHistoryManager } from "@/components/DividendHistoryManager";
+
+
 
 const goalSchema = z.object({
   monthly_goal: z.number().min(0, "0 이상 입력해주세요").max(1_000_000_000_000),
@@ -34,7 +38,20 @@ const Settings = () => {
   const { user, signOut } = useAuth();
   const displayName = useDisplayName();
   const navigate = useNavigate();
-  
+  const { toast: uiToast } = useToast(); // @/hooks/use-toast
+
+  // --- 개인정보 수정 관련 상태 추가 ---
+  const [isVerifying, setIsVerifying] = useState(false); // 비번 확인 단계
+  const [isEditing, setIsEditing] = useState(false);     // 수정 폼 단계
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [editData, setEditData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+  const [confirmPassword, setConfirmPassword] = useState(""); // ⬅️ 추가된 상태
+  const [isUpdating, setIsUpdating] = useState(false);
+ 
   const [monthly, setMonthly] = useState("");
   const [yearly, setYearly] = useState("");
   const [loading, setLoading] = useState(true);
@@ -45,8 +62,70 @@ const Settings = () => {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    document.title = "마이페이지 · Portfolio Lab";
-  }, []);
+      if (user) {
+        setEditData(prev => ({
+          ...prev,
+          name: user.user_metadata?.full_name || displayName || "",
+          email: user.email || ""
+        }));
+      }
+    }, [user, displayName]);
+
+    // 1. 비밀번호 확인 로직
+    const handleVerifyPassword = async () => {
+      if (!currentPassword) {
+        toast.error("비밀번호를 입력해주세요.");
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email: user?.email || "",
+        password: currentPassword,
+      });
+
+      if (error) {
+        toast.error("비밀번호가 일치하지 않습니다.");
+        return;
+      }
+
+      setIsVerifying(false);
+      setIsEditing(true);
+      setCurrentPassword("");
+      toast.success("본인 확인 완료! 정보를 수정할 수 있습니다.");
+    };
+
+    // 2. 정보 업데이트 로직 (검증 추가)
+      const handleUpdateProfile = async () => {
+        // 🔽 비밀번호 일치 여부 검증 로직 추가
+        if (editData.password && editData.password !== confirmPassword) {
+          toast.error("새 비밀번호가 일치하지 않습니다. 다시 확인해주세요.");
+          return;
+        }
+
+        setIsUpdating(true);
+        try {
+          const updatePayload: any = {
+            email: editData.email,
+            data: { full_name: editData.name }
+          };
+          
+          // 비밀번호를 입력했을 때만 페이로드에 추가
+          if (editData.password) updatePayload.password = editData.password;
+
+          const { error } = await supabase.auth.updateUser(updatePayload);
+
+          if (error) throw error;
+
+          toast.success("개인정보가 수정되었습니다. ✨");
+          setIsEditing(false);
+          setEditData(prev => ({ ...prev, password: "" }));
+          setConfirmPassword(""); // 초기화
+        } catch (error: any) {
+          toast.error(error.message);
+        } finally {
+          setIsUpdating(false);
+        }
+      };
 
   // 목표 데이터 불러오기
   useEffect(() => {
@@ -93,26 +172,105 @@ const Settings = () => {
         <p className="text-muted-foreground mt-1">목표 설정, 기록 관리, 데이터 백업을 한곳에서</p>
       </header>
 
-      {/* 1. 상단 정보 (계정 & 목표) */}
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="p-6 shadow-elev-sm border-none bg-card/60 backdrop-blur-sm">
-          <div className="flex items-center gap-2 mb-4 text-muted-foreground">
-            <Mail className="h-4 w-4" />
-            <h2 className="font-semibold text-foreground">계정 정보</h2>
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground">이름</p>
-              <p className="font-medium truncate">{displayName || "-"}</p>
-              <p className="text-xs text-muted-foreground mt-2">아이디</p>
-              <p className="font-medium truncate text-sm">
-                {(user?.user_metadata as any)?.username ?? user?.email?.split("@")[0]}
-              </p>
+        {/* 수정된 계정 정보 카드 */}
+        <Card className="p-6 shadow-elev-sm border-none bg-card/60 backdrop-blur-sm relative overflow-hidden">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Mail className="h-4 w-4" />
+              <h2 className="font-semibold text-foreground">계정 정보</h2>
             </div>
-            <Button variant="outline" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4 mr-2" /> 로그아웃
-            </Button>
+            
+            {/* 연필 버튼: 수정/확인 중이 아닐 때만 표시 */}
+            {!isEditing && !isVerifying && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-muted-foreground hover:text-primary"
+                onClick={() => setIsVerifying(true)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
           </div>
+
+          {/* 상황별 렌더링 */}
+          {isVerifying ? (
+            <div className="space-y-3 animate-in slide-in-from-right-2 duration-300">
+              <div className="flex items-center gap-2 text-sm text-amber-600 font-medium">
+                <Lock className="h-4 w-4" /> 비밀번호 확인이 필요합니다
+              </div>
+              <div className="flex gap-2">
+                <Input 
+                  type="password" 
+                  placeholder="현재 비밀번호 입력" 
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleVerifyPassword()}
+                />
+                <Button onClick={handleVerifyPassword}>확인</Button>
+                <Button variant="ghost" size="icon" onClick={() => setIsVerifying(false)}><X className="h-4 w-4" /></Button>
+              </div>
+            </div>
+          ) : isEditing ? (
+            <div className="space-y-4 animate-in zoom-in-95 duration-300">
+              <div className="grid gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">이름</Label>
+                  <Input 
+                    value={editData.name} 
+                    onChange={(e) => setEditData({...editData, name: e.target.value})} 
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">이메일</Label>
+                  <Input 
+                    value={editData.email} 
+                    onChange={(e) => setEditData({...editData, email: e.target.value})} 
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">새 비밀번호 </Label>
+                  <Input 
+                    type="password" 
+                    placeholder="새 비밀번호"
+                    value={editData.password} 
+                    onChange={(e) => setEditData({...editData, password: e.target.value})} 
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">새 비밀번호 확인</Label>
+                  <Input 
+                    type="password" 
+                    placeholder="새 비밀번호 확인"
+                    value={confirmPassword} 
+                    onChange={(e) => setConfirmPassword(e.target.value)} 
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button className="flex-1" onClick={handleUpdateProfile} disabled={isUpdating}>
+                  {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 mr-2" />} 저장
+                </Button>
+                <Button variant="outline" className="flex-1" onClick={() => setIsEditing(false)}>취소</Button>
+              </div>
+            </div>
+          ) : (
+            /* 기본 정적 표시 모드 */
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">이름</p>
+                <p className="font-medium truncate">{displayName || "-"}</p>
+                <p className="text-xs text-muted-foreground mt-2">아이디(이메일)</p>
+                <p className="font-medium truncate text-sm text-muted-foreground">
+                  {user?.email}
+                </p>
+              </div>
+              <Button variant="outline" onClick={handleSignOut} className="shrink-0">
+                <LogOut className="h-4 w-4 mr-2" /> 로그아웃
+              </Button>
+            </div>
+          )}
         </Card>
 
         <Card className="p-6 shadow-elev-sm border-none bg-card/60 backdrop-blur-sm">
