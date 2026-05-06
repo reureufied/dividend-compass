@@ -202,15 +202,7 @@ export const DividendBulkReviewDialog = ({ open, onOpenChange, rows, setRows, fx
                       {r.auto_mapped && (
                         <TooltipProvider>
                           <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="shrink-0 inline-flex items-center justify-center h-7 w-7 text-primary" aria-label="자동 매치됨">
-                                <Sparkles className="h-4 w-4" />
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              기존 포트폴리오 종목과 자동 매치되었습니다
-                              {r.original_name ? ` (원본: "${r.original_name}")` : ""}
-                            </TooltipContent>
+                
                           </Tooltip>
                         </TooltipProvider>
                       )}

@@ -13,6 +13,8 @@ import { EditHoldingDialog } from "./EditHoldingDialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
+import { Checkbox } from "@/components/ui/checkbox"; // 임포트 확인!
+
 export const AssetHistoryManager = () => {
   const [snapshots, setSnapshots] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,6 +74,28 @@ export const AssetHistoryManager = () => {
 
     return dateEntries;
   }, [snapshots, startDate, endDate, sortBy]);
+
+
+  // 컴포넌트 내부
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // 전체 선택/해제 로직
+  const onHeaderCheckboxChange = (checked: boolean, allIds: string[]) => {
+    if (checked) {
+      setSelectedIds(allIds);
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  // 개별 선택/해제 로직
+  const onRowCheckboxChange = (checked: boolean, id: string) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((item) => item !== id));
+    }
+  };
 
   // 날짜 일괄 변경 실행
   const handleBulkDateUpdate = async () => {
@@ -254,6 +278,8 @@ export const AssetHistoryManager = () => {
     </div>
   );
 };
+
+
 
 // 미니 뱃지 UI 컴포넌트
 const Badge = ({ icon, label, value, color }: any) => (

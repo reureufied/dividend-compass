@@ -59,6 +59,7 @@ export const DividendUploadCard = ({ fxRate, onSaved }: Props) => {
       const base64Data = dataUrl.split(",")[1];
 
       // 🌟 레이아웃 패턴 인식 및 명칭 정제 규칙이 강화된 프롬프트
+      const currentYear = new Date().getFullYear();
       const prompt = `
         이 이미지는 증권사 계좌의 입출금 내역 스크린샷이야.
         이미지에서 오직 "배당금", "분배금", "배당", "분배"라는 단어가 포함된 내역만 추출해줘.
@@ -70,13 +71,13 @@ export const DividendUploadCard = ({ fxRate, onSaved }: Props) => {
            - 패턴 A (가로형): 종목명과 같은 줄의 '오른쪽 끝'에 크게 써있는 숫자를 찾아. 종종 다른 색(빨간색 등)으로 써있기도 해.
            - 패턴 B (세로형): 종목명 바로 '아래 줄'에 크게 써있는 숫자를 찾아.
         3. 🚨 제외: '잔액', '수수료', '세금', '배당소득세'는 금액으로 가져오지 마. 무조건 "실제 입금된 금액(실수령액)"만 가져와.
-        4. 날짜에 년도가 따로 나와있지 않다면 현자 연도로 입력해줘. 
+        4. 연도가 생략되어 있고 '월/일'만 있다면 반드시 ${currentYear}년으로 간주해.
         
         [📋 추출 규칙]
         1. asset_name: 배당을 지급한 종목명.
         2. amount: 쉼표나 기호($ , 원)를 제거한 순수 "숫자"만 추출. (예: "1,200원" -> 1200)
         3. currency: 금액이 원화면 "KRW", 달러면 "USD"로 정확히 구분해.
-        4. date: 지급일 (YYYY-MM-DD).
+        4. date: 지급일 (YYYY-MM-DD).년도에 대한 정보가 없다면 오늘 날짜와 동일한 년도로 입력해줘.
 
         응답 형식: {"results": [{"asset_name": "종목명", "amount": 1234, "currency": "KRW", "date": "2026-05-05"}]}
         배당 내역이 전혀 없으면 {"results": []} 라고 응답해. 오직 JSON만 출력해.
@@ -86,6 +87,7 @@ export const DividendUploadCard = ({ fxRate, onSaved }: Props) => {
         prompt,
         { inlineData: { data: base64Data, mimeType: file.type } },
       ]);
+      
 
       const responseText = result.response.text();
       const cleanedJson = responseText.replace(/```json/gi, "").replace(/```/g, "").trim();
