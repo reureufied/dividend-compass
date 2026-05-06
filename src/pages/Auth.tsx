@@ -172,7 +172,7 @@ const Auth = () => {
             {/* 로고 이미지 컨테이너 */}
             <div className="h-12 w-12 rounded-xl overflow-hidden flex items-center justify-center">
               <img 
-                src="/public/logo.ico" // 👈 여기에 저장해두신 실제 경로를 입력하세요! (예: /logo.png 또는 /src/assets/logo.png)
+                src="/logo.ico" // 👈 여기에 저장해두신 실제 경로를 입력하세요! (예: /logo.png 또는 /src/assets/logo.png)
                 alt="Dividend Compass Logo"
                 className="h-full w-full object-cover"
               />
