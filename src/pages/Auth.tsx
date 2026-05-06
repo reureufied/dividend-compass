@@ -166,12 +166,17 @@ const Auth = () => {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-subtle p-4">
-      <div className="w-full max-w-md animate-fade-in">
-        <div className="flex items-center justify-center mb-8 gap-2">
-          <div className="h-11 w-11 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-elev-lg">
-            <TrendingUp className="h-6 w-6 text-primary-foreground" />
-          </div>
+      <main className="min-h-screen flex items-center justify-center bg-gradient-subtle p-4">
+        <div className="w-full max-w-md animate-fade-in">
+          <div className="flex items-center justify-center mb-8 gap-3">
+            {/* 로고 이미지 컨테이너 */}
+            <div className="h-12 w-12 rounded-xl overflow-hidden flex items-center justify-center">
+              <img 
+                src="/public/logo.ico" // 👈 여기에 저장해두신 실제 경로를 입력하세요! (예: /logo.png 또는 /src/assets/logo.png)
+                alt="Dividend Compass Logo"
+                className="h-full w-full object-cover"
+              />
+            </div>
           <h1 className="text-2xl font-bold tracking-tight">Portfolio Lab</h1>
         </div>
 

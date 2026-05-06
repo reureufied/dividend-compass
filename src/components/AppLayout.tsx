@@ -41,7 +41,7 @@ export const AppLayout = () => {
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur-lg">
         <div className="max-w-5xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl overflow-hidden flex items-center justify-center shadow-elev-md bg-white">
+            <div className="h-9 w-9 rounded-xl overflow-hidden flex items-center justify-center">
               <img 
                 src="/logo.ico"
                 alt="Dividend Compass Logo" 
