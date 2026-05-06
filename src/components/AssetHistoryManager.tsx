@@ -79,12 +79,25 @@ export const AssetHistoryManager = () => {
   // 컴포넌트 내부
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  // 특정 날짜의 모든 ID 가져오기
+  const getIdsByDate = (items: any[]) => items.map(item => item.id);
+
   // 전체 선택/해제 로직
   const onHeaderCheckboxChange = (checked: boolean, allIds: string[]) => {
     if (checked) {
       setSelectedIds(allIds);
     } else {
       setSelectedIds([]);
+    }
+  };
+
+  // 날짜 헤더 체크박스 로직 (해당 날짜 전체 선택/해제)
+  const onDateCheckboxChange = (checked: boolean, dateItems: any[]) => {
+    const dateIds = getIdsByDate(dateItems);
+    if (checked) {
+      setSelectedIds(prev => [...new Set([...prev, ...dateIds])]);
+    } else {
+      setSelectedIds(prev => prev.filter(id => !dateIds.includes(id)));
     }
   };
 
@@ -115,6 +128,25 @@ export const AssetHistoryManager = () => {
     }
   };
 
+  // 일괄 삭제 실행
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`선택한 ${selectedIds.length}개 종목을 모두 삭제하시겠습니까?`)) return;
+
+    const { error } = await supabase
+      .from("portfolio_snapshots")
+      .delete()
+      .in("id", selectedIds);
+
+    if (error) {
+      toast.error("일괄 삭제에 실패했습니다.");
+    } else {
+      toast.success("선택한 항목들이 삭제되었습니다.");
+      setSelectedIds([]); // 선택 비우기
+      fetchData(); // 리프레시
+    }
+  };
+
   // 단일 종목 삭제
   const handleDeleteRow = async (id: string) => {
     if (!confirm("이 종목 기록을 삭제하시겠습니까?")) return;
@@ -134,6 +166,21 @@ export const AssetHistoryManager = () => {
 
   return (
     <div className="space-y-4">
+      {selectedIds.length > 0 && (
+        <div className="flex items-center gap-3 p-4 bg-primary/10 border border-primary/20 rounded-2xl animate-in slide-in-from-top-2">
+          <Checkbox 
+            checked={selectedIds.length === snapshots.length}
+            onCheckedChange={(checked) => onHeaderCheckboxChange(!!checked, snapshots.map(s => s.id))}
+          />
+          <span className="text-sm font-bold text-primary">{selectedIds.length}개 선택됨</span>
+          <div className="ml-auto flex gap-2">
+            <Button size="sm" variant="destructive" onClick={handleBulkDelete}>
+              <Trash2 className="h-4 w-4 mr-1" /> 일괄 삭제
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>취소</Button>
+          </div>
+        </div>
+      )}
       {/* 🌟 4. 필터 & 5. 정렬 컨트롤 바 */}
       <div className="flex flex-col md:flex-row gap-4 items-end justify-between p-4 bg-secondary/30 rounded-2xl border border-border/50">
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
@@ -171,78 +218,80 @@ export const AssetHistoryManager = () => {
 
       {/* 🌟 3. 스크롤 가능한 단일 카드 (날짜 리스트) */}
       <div className="rounded-2xl border bg-card overflow-hidden shadow-sm">
-        <div className="max-h-[600px] overflow-y-auto divide-y divide-border scrollbar-hide">
-          {filteredAndSortedDates.length === 0 ? (
-            <div className="p-24 text-center text-muted-foreground">조건에 맞는 자산 기록이 없습니다.</div>
-          ) : (
-            filteredAndSortedDates.map(([date, items]) => (
-              <div key={date} className="group/date relative">
+        <div className="max-h-[600px] overflow-y-auto divide-y divide-border">
+          {filteredAndSortedDates.map(([date, items]) => {
+            const dateIds = getIdsByDate(items);
+            const isAllDateSelected = dateIds.every(id => selectedIds.includes(id));
+            const isSomeDateSelected = dateIds.some(id => selectedIds.includes(id)) && !isAllDateSelected;
                 
-                {/* 날짜 헤더 (클릭 시 펼침/접힘) */}
-                <div 
-                  className={cn(
-                    "sticky top-0 z-10 p-4 bg-card/95 backdrop-blur-md flex items-center justify-between cursor-pointer border-b transition-colors",
-                    expandedDate === date ? "bg-primary/5" : "hover:bg-secondary/20"
-                  )}
-                  onClick={() => setExpandedDate(expandedDate === date ? null : date)}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-base sm:text-lg tabular-nums tracking-tight">{date}</span>
+                return (
+                <div key={date} className="group/date relative">
+                  {/* 날짜 헤더 */}
+                  <div 
+                    className={cn(
+                      "sticky top-0 z-10 p-4 bg-card/95 backdrop-blur-md flex items-center gap-3 cursor-pointer border-b transition-colors",
+                      expandedDate === date ? "bg-primary/5" : "hover:bg-secondary/20"
+                    )}
+                    onClick={() => setExpandedDate(expandedDate === date ? null : date)}
+                  >
+                    {/* 🌟 추가: 날짜별 전체 선택 체크박스 */}
+                    <Checkbox 
+                      checked={isAllDateSelected || (isSomeDateSelected ? "indeterminate" : false)}
+                      onCheckedChange={(checked) => onDateCheckboxChange(!!checked, items)}
+                      onClick={(e) => e.stopPropagation()} // 클릭 시 아코디언 열림 방지
+                    />
                     
-                    {/* 🌟 2. 날짜 일괄 수정 버튼 (연필 아이콘) */}
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-7 w-7 rounded-full bg-primary/10 text-primary opacity-0 group-hover/date:opacity-100 transition-all hover:bg-primary hover:text-primary-foreground"
-                      onClick={(e) => {
-                        e.stopPropagation(); // 클릭 시 아코디언이 열리는 것을 방지
-                        setTargetDate(date);
-                        setNewDate(date);
-                        setDateEditOpen(true);
-                      }}
-                      title="이 날짜 일괄 수정"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
+                    <div className="flex-1 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-base sm:text-lg">{date}</span>
+                        <Button 
+                          variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover/date:opacity-100"
+                          onClick={(e) => { e.stopPropagation(); setTargetDate(date); setDateEditOpen(true); }}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-[10px] font-bold bg-secondary px-2.5 py-1 rounded-full">{items.length}개 종목</span>
+                        {expandedDate === date ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="flex items-center gap-4">
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-secondary text-secondary-foreground px-2.5 py-1 rounded-full">
-                      {items.length}개 종목
-                    </span>
-                    {expandedDate === date ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
-                  </div>
-                </div>
-
-                {/* 해당 날짜의 종목 리스트 */}
-                {expandedDate === date && (
-                  <div className="p-3 space-y-2 bg-muted/10">
-                    {items.map((h) => (
-                      <div key={h.id} className="p-4 rounded-xl border bg-background flex items-start sm:items-center justify-between gap-4 group hover:border-primary/30 transition-colors">
-                        <div className="flex-1 min-w-0 space-y-2.5">
-                          <h4 className="font-bold text-sm text-foreground truncate">{h.asset_name}</h4>
-                          <div className="flex flex-wrap gap-1.5">
-                            <Badge icon={<Wallet />} label="수량" value={h.quantity?.toLocaleString()} color="bg-blue-500/10 text-blue-600" />
-                            <Badge icon={<CircleDollarSign />} label="매수" value={formatPrice(h.avg_purchase_price, h.currency)} color="bg-amber-500/10 text-amber-600" />
-                            <Badge icon={<TrendingUp />} label="현재" value={formatPrice(h.current_price, h.currency)} color="bg-emerald-500/10 text-emerald-600" />
-                            <Badge icon={<Target />} label="비중" value={`${h.target_weight}%`} color="bg-purple-500/10 text-purple-600" />
+                  {/* 해당 날짜의 종목 리스트 */}
+                  {expandedDate === date && (
+                    <div className="p-3 space-y-2 bg-muted/10">
+                      {items.map((h) => (
+                        <div key={h.id} className="p-4 rounded-xl border bg-background flex items-center justify-between gap-4 group hover:border-primary/30 transition-colors">
+                          <Checkbox 
+                            checked={selectedIds.includes(h.id)}
+                            onCheckedChange={(checked) => onRowCheckboxChange(!!checked, h.id)}
+                            className="shrink-0"
+                          />
+                          <div className="flex-1 min-w-0 space-y-2.5">
+                            <h4 className="font-bold text-sm text-foreground truncate">{h.asset_name}</h4>
+                            <div className="flex flex-wrap gap-1.5">
+                              <Badge icon={<Wallet />} label="수량" value={h.quantity?.toLocaleString()} color="bg-blue-500/10 text-blue-600" />
+                              <Badge icon={<CircleDollarSign />} label="매수" value={formatPrice(h.avg_purchase_price, h.currency)} color="bg-amber-500/10 text-amber-600" />
+                              <Badge icon={<TrendingUp />} label="현재" value={formatPrice(h.current_price, h.currency)} color="bg-emerald-500/10 text-emerald-600" />
+                              <Badge icon={<Target />} label="비중" value={`${h.target_weight}%`} color="bg-purple-500/10 text-purple-600" />
+                            </div>
+                          </div>
+                          <div className="flex flex-col sm:flex-row gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingHolding(h)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteRow(h.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex flex-col sm:flex-row gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingHolding(h)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteRow(h.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))
-          )}
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          }
         </div>
       </div>
 
